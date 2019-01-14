@@ -18,7 +18,6 @@ package org.jetbrains.kotlin.contracts
 
 import org.jetbrains.kotlin.builtins.DefaultBuiltIns
 import org.jetbrains.kotlin.contracts.description.ContractProviderKey
-import org.jetbrains.kotlin.contracts.interpretation.ContractInterpretationDispatcher
 import org.jetbrains.kotlin.contracts.model.Computation
 import org.jetbrains.kotlin.contracts.model.ConditionalEffect
 import org.jetbrains.kotlin.contracts.model.ESEffect
@@ -41,6 +40,7 @@ import org.jetbrains.kotlin.resolve.calls.tasks.ExplicitReceiverKind
 import org.jetbrains.kotlin.resolve.constants.CompileTimeConstant
 import org.jetbrains.kotlin.resolve.constants.UnsignedErrorValueTypeConstant
 import org.jetbrains.kotlin.resolve.scopes.receivers.ExpressionReceiver
+import org.jetbrains.kotlin.resolve.scopes.receivers.ExtensionReceiver
 import org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.utils.addIfNotNull
@@ -71,7 +71,7 @@ class EffectsExtractingVisitor(
                 DefaultBuiltIns.Instance.booleanType,
                 EqualsFunctor(false).invokeWithArguments(arguments)
             )
-            descriptor is ValueDescriptor -> ESDataFlowValue(
+            descriptor is ValueDescriptor -> ESVariableWithDataFlowValue(
                 descriptor,
                 (element as KtExpression).createDataFlowValue() ?: return UNKNOWN_COMPUTATION
             )
@@ -156,7 +156,16 @@ class EffectsExtractingVisitor(
 
     private fun ReceiverValue.toComputation(): Computation = when (this) {
         is ExpressionReceiver -> extractOrGetCached(expression)
+        is ExtensionReceiver -> ESReceiverWithDataFlowValue(this, createDataFlowValue())
         else -> UNKNOWN_COMPUTATION
+    }
+
+    private fun ExtensionReceiver.createDataFlowValue(): DataFlowValue {
+        return dataFlowValueFactory.createDataFlowValue(
+            receiverValue = this,
+            bindingContext = trace.bindingContext,
+            containingDeclarationOrModule = this.declarationDescriptor
+        )
     }
 
     private fun KtExpression.createDataFlowValue(): DataFlowValue? {

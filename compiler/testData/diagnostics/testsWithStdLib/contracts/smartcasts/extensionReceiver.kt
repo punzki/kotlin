@@ -19,7 +19,7 @@ fun smartcastOnReceiver(x: Int?) {
             <!UNSAFE_CALL!>inc<!>()
         }
         else {
-            <!UNSAFE_CALL!>dec<!>()
+            <!DEBUG_INFO_IMPLICIT_RECEIVER_SMARTCAST!>dec<!>()
         }
     }
 }
