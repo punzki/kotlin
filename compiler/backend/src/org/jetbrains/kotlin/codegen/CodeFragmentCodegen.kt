@@ -129,7 +129,10 @@ class CodeFragmentCodegen private constructor(
                     expression: KtSimpleNameExpression, receiver: StackValue,
                     descriptor: DeclarationDescriptor, resolvedCall: ResolvedCall<*>?, isSyntheticField: Boolean
                 ): StackValue {
-                    findCapturedValue(descriptor)?.let { return it }
+                    val resultingDescriptor = resolvedCall?.resultingDescriptor
+                    if (resultingDescriptor != null) {
+                        findCapturedValue(resultingDescriptor)?.let { return it }
+                    }
                     return super.visitNonIntrinsicSimpleNameExpression(expression, receiver, descriptor, resolvedCall, isSyntheticField)
                 }
 

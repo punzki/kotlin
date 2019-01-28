@@ -150,6 +150,11 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
             override fun capturedNameMatches(name: String) = false
         }
 
+        class FieldVar(val fieldName: String, asmType: AsmType) : VariableKind(asmType) {
+            // Captured 'field' are not supported yet
+            override fun capturedNameMatches(name: String) = false
+        }
+
         class ExtensionThis(val label: String, asmType: AsmType) : VariableKind(asmType) {
             val parameterName = getLabeledThisName(label, AsmUtil.LABELED_THIS_PARAMETER, AsmUtil.RECEIVER_PARAMETER_NAME)
             val fieldName = getLabeledThisName(label, getCapturedFieldName(AsmUtil.LABELED_THIS_FIELD), AsmUtil.CAPTURED_RECEIVER_FIELD)
@@ -181,6 +186,7 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
             Kind.LOCAL_FUNCTION -> findLocalFunction(VariableKind.LocalFunction(parameter.name, asmType))
             Kind.DISPATCH_RECEIVER -> findDispatchThis(VariableKind.OuterClassThis(asmType))
             Kind.COROUTINE_CONTEXT -> findCoroutineContext()
+            Kind.FIELD_VAR -> findFieldVariable(VariableKind.FieldVar(parameter.name, asmType))
         }
     }
 
@@ -198,11 +204,17 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
         return findCapturedVariable(kind, containingThis)
     }
 
+    private fun findFieldVariable(kind: VariableKind.FieldVar): Result? {
+        val thisObject = frameProxy.thisObject() ?: return null
+        val field = thisObject.referenceType().fieldByName(kind.fieldName) ?: return null
+        return Result(thisObject.getValue(field))
+    }
+
     private fun findLocalFunction(kind: VariableKind.LocalFunction): Result? {
         val variables = frameProxy.safeVisibleVariables()
         
         // Local variables – direct search, new convention
-        val newConventionName = AsmUtil.LOCAL_FUNCTION_VARIABLE_PREFIX + kind.name + "$"
+        val newConventionName = AsmUtil.LOCAL_FUNCTION_VARIABLE_PREFIX + kind.name
         findLocalVariable(variables, kind, newConventionName)?.let { return it }
 
         // Local variables – direct search, old convention (before 1.3.30)

@@ -18,6 +18,7 @@ package org.jetbrains.kotlin.idea.caches.resolve
 
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptorWithResolutionScopes
+import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
 import org.jetbrains.kotlin.idea.project.ResolveElementCache
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.psi.*
@@ -149,7 +150,19 @@ class CodeFragmentAnalyzer(
                 val correctedContext = context.correctContextForElement()
                 bindingContextForContext = resolveToElement(correctedContext)
 
-                scopeForContextElement = bindingContextForContext[BindingContext.LEXICAL_SCOPE, correctedContext]
+                var scopeForCorrectedElement = bindingContextForContext[BindingContext.LEXICAL_SCOPE, correctedContext]
+
+                if (scopeForCorrectedElement == null && correctedContext is KtParameter) {
+                    val parameterDescriptor = bindingContextForContext[BindingContext.VALUE_PARAMETER, correctedContext]
+                    val containingConstructor = (parameterDescriptor?.containingDeclaration as? ConstructorDescriptor)
+                        ?.takeIf { it.isPrimary }
+                    val containingClass = containingConstructor?.containingDeclaration as? ClassDescriptorWithResolutionScopes
+                    if (containingClass != null) {
+                        scopeForCorrectedElement = containingClass.scopeForInitializerResolution
+                    }
+                }
+
+                scopeForContextElement = scopeForCorrectedElement
                 dataFlowInfo = bindingContextForContext.getDataFlowInfoAfter(correctedContext)
             }
             else -> return null

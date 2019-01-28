@@ -337,6 +337,8 @@ class KotlinEvaluator(val codeFragment: KtCodeFragment, val sourcePosition: Sour
 
                 if (parameter in compiledData.crossingBounds) {
                     evaluationException("'$name' is not captured")
+                } else if (parameter.kind == CodeFragmentParameter.Kind.FIELD_VAR) {
+                    evaluationException("Cannot find the backing field '${parameter.name}'")
                 } else {
                     throw VariableFinder.variableNotFound(evaluationContext, buildString {
                         append("Cannot find local variable: name = '").append(name).append("', type = ").append(asmType.className)

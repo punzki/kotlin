@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.codegen.AsmUtil
 import org.jetbrains.kotlin.codegen.CodeFragmentCodegenInfo
 import org.jetbrains.kotlin.codegen.getCallLabelForLambdaArgument
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.descriptors.impl.SyntheticFieldDescriptor
 import org.jetbrains.kotlin.idea.debugger.evaluate.CodeFragmentParameter.*
 import org.jetbrains.kotlin.idea.debugger.evaluate.KotlinCodeFragmentFactory.Companion.FAKE_JAVA_CONTEXT_FUNCTION_NAME
 import org.jetbrains.kotlin.idea.util.application.runReadAction
@@ -33,7 +34,8 @@ interface CodeFragmentParameter {
     val debugString: String
 
     enum class Kind {
-        ORDINARY, EXTENSION_RECEIVER, DISPATCH_RECEIVER, COROUTINE_CONTEXT, LOCAL_FUNCTION, FAKE_JAVA_OUTER_CLASS
+        ORDINARY, EXTENSION_RECEIVER, DISPATCH_RECEIVER, COROUTINE_CONTEXT, LOCAL_FUNCTION,
+        FAKE_JAVA_OUTER_CLASS, FIELD_VAR
     }
 
     class Smart(
@@ -86,6 +88,13 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
                 if (dispatchReceiver is ImplicitReceiver) {
                     val descriptor = dispatchReceiver.declarationDescriptor
                     val parameter = processReceiver(dispatchReceiver)
+                    checkBounds(descriptor, expression, parameter)
+                    processed = true
+                }
+
+                if (!processed && resolvedCall.resultingDescriptor is SyntheticFieldDescriptor) {
+                    val descriptor = resolvedCall.resultingDescriptor as SyntheticFieldDescriptor
+                    val parameter = processSyntheticFieldVariable(descriptor)
                     checkBounds(descriptor, expression, parameter)
                     processed = true
                 }
@@ -182,6 +191,15 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
         val type = receiverParameter.type
         return parameters.getOrPut(descriptor) {
             Smart(Dumb(Kind.FAKE_JAVA_OUTER_CLASS, label, AsmUtil.THIS), type, receiverParameter)
+        }
+    }
+
+    private fun processSyntheticFieldVariable(descriptor: SyntheticFieldDescriptor): Smart? {
+        val propertyDescriptor = descriptor.propertyDescriptor
+        val fieldName = propertyDescriptor.name.asString()
+        val type = propertyDescriptor.type
+        return parameters.getOrPut(descriptor) {
+            Smart(Dumb(Kind.FIELD_VAR, fieldName, "field"), type, descriptor)
         }
     }
 

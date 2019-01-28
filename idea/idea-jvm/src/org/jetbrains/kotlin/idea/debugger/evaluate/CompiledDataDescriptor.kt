@@ -26,7 +26,7 @@ class CompiledDataDescriptor(
                 if (dumb.kind == CodeFragmentParameter.Kind.LOCAL_FUNCTION) {
                     val suffix = localFunctionSuffixes[dumb]
                     if (suffix != null) {
-                        dumbParameters += dumb.copy(name = dumb.name + "$" + suffix)
+                        dumbParameters += dumb.copy(name = dumb.name + suffix)
                         continue
                     }
                 }
