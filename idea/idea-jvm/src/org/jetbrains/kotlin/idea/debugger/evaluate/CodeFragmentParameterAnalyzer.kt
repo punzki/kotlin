@@ -65,11 +65,23 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
 
         codeFragment.accept(object : KtTreeVisitor<Unit>() {
             override fun visitSimpleNameExpression(expression: KtSimpleNameExpression, data: Unit?): Void? {
+                val resolvedCall = expression.getResolvedCall(bindingContext) ?: return null
+
+                run {
+                    val descriptor = resolvedCall.resultingDescriptor as? CallableDescriptor
+                    val containingClass = descriptor?.containingDeclaration as? ClassDescriptor
+                    val extensionParameter = descriptor?.extensionReceiverParameter
+                    if (descriptor != null && extensionParameter != null && containingClass != null) {
+                        if (containingClass.kind != ClassKind.OBJECT) {
+                            processDispatchReceiver(containingClass)
+                        }
+                    }
+                }
+
                 if (runReadAction { expression.isDotSelector() }) {
                     return null
                 }
 
-                val resolvedCall = expression.getResolvedCall(bindingContext) ?: return null
                 if (isCodeFragmentDeclaration(resolvedCall.resultingDescriptor)) {
                     return null
                 }

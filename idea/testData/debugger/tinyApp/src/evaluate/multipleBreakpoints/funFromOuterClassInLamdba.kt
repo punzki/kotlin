@@ -23,7 +23,7 @@ class Outer {
             // outer isn't captured in lambda
             lambda {
                 // EXPRESSION: foo() + 2
-                // RESULT: 'this' is not captured
+                // RESULT: 'this@Outer' is not captured
                 //Breakpoint!
                 val a = 1
             }

@@ -17,7 +17,7 @@ class Receiver2 {
     fun test1() {
         with(Receiver1()) {
             // EXPRESSION: privateFun()
-            // RESULT: 1: I
+            // RESULT: 2: I
             //Breakpoint!
             privateFun()
         }
