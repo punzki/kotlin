@@ -71,7 +71,9 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
                     val descriptor = resolvedCall.resultingDescriptor as? CallableDescriptor
                     val containingClass = descriptor?.containingDeclaration as? ClassDescriptor
                     val extensionParameter = descriptor?.extensionReceiverParameter
-                    if (descriptor != null && extensionParameter != null && containingClass != null) {
+                    if (descriptor != null && descriptor !is DebuggerFieldPropertyDescriptor
+                        && extensionParameter != null && containingClass != null
+                    ) {
                         if (containingClass.kind != ClassKind.OBJECT) {
                             processDispatchReceiver(containingClass)
                         }

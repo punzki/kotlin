@@ -99,6 +99,7 @@ class CodeFragmentAnalyzer(
         return when (context) {
             is KtParameter -> context.getParentOfType<KtFunction>(true)
             is KtProperty -> context.delegateExpressionOrInitializer
+            is KtConstructor<*> -> context
             is KtFunctionLiteral -> context.bodyExpression?.statements?.lastOrNull()
             is KtDeclarationWithBody -> context.bodyExpression
             is KtBlockExpression -> context.statements.lastOrNull()
