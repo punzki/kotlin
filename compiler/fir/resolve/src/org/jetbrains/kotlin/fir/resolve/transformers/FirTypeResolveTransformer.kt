@@ -29,15 +29,17 @@ open class FirTypeResolveTransformer(
 ) : FirAbstractTreeTransformerWithSuperTypes(reversedScopePriority = true) {
     override fun transformFile(file: FirFile, data: Nothing?): CompositeTransformResult<FirFile> {
         val session = file.session
-        towerScope.scopes += listOf(
-            // from low priority to high priority
-            FirDefaultStarImportingScope(session),
-            FirExplicitStarImportingScope(file.imports, session),
-            FirDefaultSimpleImportingScope(session),
-            FirSelfImportingScope(file.packageFqName, session),
-            FirExplicitSimpleImportingScope(file.imports, session)
-        )
-        return super.transformFile(file, data)
+        return withScopeCleanup {
+            towerScope.scopes += listOf(
+                // from low priority to high priority
+                FirDefaultStarImportingScope(session),
+                FirExplicitStarImportingScope(file.imports, session),
+                FirDefaultSimpleImportingScope(session),
+                FirSelfImportingScope(file.packageFqName, session),
+                FirExplicitSimpleImportingScope(file.imports, session)
+            )
+            super.transformFile(file, data)
+        }
     }
 
     private fun resolveSuperTypesAndExpansions(element: FirMemberDeclaration) {
@@ -53,11 +55,11 @@ open class FirTypeResolveTransformer(
         withScopeCleanup {
             regularClass.addTypeParametersScope()
             resolveSuperTypesAndExpansions(regularClass)
-        }
-        return withScopeCleanup {
             regularClass.typeParameters.forEach {
                 it.accept(this, data)
             }
+        }
+        return withScopeCleanup {
             val firProvider = FirProvider.getInstance(regularClass.session)
             val classId = regularClass.symbol.classId
             lookupSuperTypes(regularClass).asReversed().mapTo(towerScope.scopes) {
