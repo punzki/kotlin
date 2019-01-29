@@ -65,8 +65,7 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
     private val parameters = LinkedHashMap<DeclarationDescriptor, Smart>()
     private val crossingBounds = mutableSetOf<Dumb>()
 
-    private val onceUsedChecker =
-        OnceUsedChecker(CodeFragmentParameterAnalyzer::class.java)
+    private val onceUsedChecker = OnceUsedChecker(CodeFragmentParameterAnalyzer::class.java)
 
     fun analyze(): CodeFragmentParameterInfo {
         onceUsedChecker.trigger()

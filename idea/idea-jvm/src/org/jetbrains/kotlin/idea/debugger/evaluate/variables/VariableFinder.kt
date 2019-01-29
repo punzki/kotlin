@@ -81,8 +81,7 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
         // org.jetbrains.kotlin.codegen.inline.MethodInliner.prepareNode
         private const val OUTER_THIS_FOR_INLINE = AsmUtil.THIS + '_'
 
-        val inlinedThisRegex =
-            getLocalVariableNameRegexInlineAware(OUTER_THIS_FOR_INLINE)
+        val inlinedThisRegex = getLocalVariableNameRegexInlineAware(OUTER_THIS_FOR_INLINE)
 
         private fun getCapturedVariableNameRegex(capturedName: String): Regex {
             val escapedName = Regex.escape(capturedName)
@@ -135,10 +134,7 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
         abstract fun capturedNameMatches(name: String): Boolean
 
         class Ordinary(val name: String, asmType: AsmType) : VariableKind(asmType) {
-            private val capturedNameRegex =
-                getCapturedVariableNameRegex(
-                    getCapturedFieldName(this.name)
-                )
+            private val capturedNameRegex = getCapturedVariableNameRegex(getCapturedFieldName(this.name))
             override fun capturedNameMatches(name: String) = capturedNameRegex.matches(name)
         }
 
@@ -166,8 +162,7 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
             val parameterName = getLabeledThisName(label, AsmUtil.LABELED_THIS_PARAMETER, AsmUtil.RECEIVER_PARAMETER_NAME)
             val fieldName = getLabeledThisName(label, getCapturedFieldName(AsmUtil.LABELED_THIS_FIELD), AsmUtil.CAPTURED_RECEIVER_FIELD)
 
-            private val capturedNameRegex =
-                getCapturedVariableNameRegex(fieldName)
+            private val capturedNameRegex = getCapturedVariableNameRegex(fieldName)
             override fun capturedNameMatches(name: String) = capturedNameRegex.matches(name)
         }
     }
@@ -177,17 +172,11 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
     private class NamedEntity(val name: String, val type: JdiType?, val value: () -> Value?) {
         companion object {
             fun of(field: Field, owner: ObjectReference): NamedEntity {
-                return NamedEntity(
-                    field.name(),
-                    field.safeType()
-                ) { owner.getValue(field) }
+                return NamedEntity(field.name(), field.safeType()) { owner.getValue(field) }
             }
 
             fun of(variable: LocalVariableProxyImpl, frameProxy: StackFrameProxyImpl): NamedEntity {
-                return NamedEntity(
-                    variable.name(),
-                    variable.safeType()
-                ) { frameProxy.getValue(variable) }
+                return NamedEntity(variable.name(), variable.safeType()) { frameProxy.getValue(variable) }
             }
         }
     }
@@ -449,11 +438,6 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
     }
 
     private fun List<LocalVariableProxyImpl>.namedEntitySequence(): Sequence<NamedEntity> {
-        return asSequence().map {
-            NamedEntity.of(
-                it,
-                frameProxy
-            )
-        }
+        return asSequence().map { NamedEntity.of(it, frameProxy) }
     }
 }

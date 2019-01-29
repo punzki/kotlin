@@ -52,9 +52,7 @@ object CodeFragmentCompiler {
     data class MethodSignature(val parameterTypes: List<Type>, val returnType: Type)
 
     fun compile(codeFragment: KtCodeFragment, bindingContext: BindingContext, moduleDescriptor: ModuleDescriptor): CompilationResult {
-        return runReadAction {
-            doCompile(codeFragment, bindingContext, moduleDescriptor)
-        }
+        return runReadAction { doCompile(codeFragment, bindingContext, moduleDescriptor) }
     }
 
     private fun doCompile(codeFragment: KtCodeFragment, bindingContext: BindingContext, moduleDescriptor: ModuleDescriptor): CompilationResult {
@@ -79,14 +77,9 @@ object CodeFragmentCompiler {
         ).build()
 
         val parameterInfo = CodeFragmentParameterAnalyzer(codeFragment, bindingContext).analyze()
-
         val (classDescriptor, methodDescriptor) = createDescriptorsForCodeFragment(
-            codeFragment,
-            Name.identifier(GENERATED_CLASS_NAME),
-            Name.identifier(GENERATED_FUNCTION_NAME),
-            parameterInfo,
-            returnType,
-            moduleDescriptorWrapper.packageFragmentForEvaluator
+            codeFragment, Name.identifier(GENERATED_CLASS_NAME), Name.identifier(GENERATED_FUNCTION_NAME),
+            parameterInfo, returnType, moduleDescriptorWrapper.packageFragmentForEvaluator
         )
 
         val codegenInfo = CodeFragmentCodegenInfo(classDescriptor, methodDescriptor, parameterInfo.parameters)
