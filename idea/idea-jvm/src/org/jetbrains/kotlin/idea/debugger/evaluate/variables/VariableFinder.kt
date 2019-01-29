@@ -194,41 +194,13 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
 
     fun find(parameter: CodeFragmentParameter, asmType: AsmType): Result? {
         return when (parameter.kind) {
-            Kind.ORDINARY -> findOrdinary(
-                VariableKind.Ordinary(
-                    parameter.name,
-                    asmType
-                )
-            )
-            Kind.FAKE_JAVA_OUTER_CLASS -> frameProxy.thisObject()?.let {
-                Result(
-                    it
-                )
-            }
-            Kind.EXTENSION_RECEIVER -> findExtensionThis(
-                VariableKind.ExtensionThis(
-                    parameter.name,
-                    asmType
-                )
-            )
-            Kind.LOCAL_FUNCTION -> findLocalFunction(
-                VariableKind.LocalFunction(
-                    parameter.name,
-                    asmType
-                )
-            )
-            Kind.DISPATCH_RECEIVER -> findDispatchThis(
-                VariableKind.OuterClassThis(
-                    asmType
-                )
-            )
+            Kind.ORDINARY -> findOrdinary(VariableKind.Ordinary(parameter.name, asmType))
+            Kind.FAKE_JAVA_OUTER_CLASS -> frameProxy.thisObject()?.let { Result(it) }
+            Kind.EXTENSION_RECEIVER -> findExtensionThis(VariableKind.ExtensionThis(parameter.name, asmType))
+            Kind.LOCAL_FUNCTION -> findLocalFunction(VariableKind.LocalFunction(parameter.name, asmType))
+            Kind.DISPATCH_RECEIVER -> findDispatchThis(VariableKind.OuterClassThis(asmType))
             Kind.COROUTINE_CONTEXT -> findCoroutineContext()
-            Kind.FIELD_VAR -> findFieldVariable(
-                VariableKind.FieldVar(
-                    parameter.name,
-                    asmType
-                )
-            )
+            Kind.FIELD_VAR -> findFieldVariable(VariableKind.FieldVar(parameter.name, asmType))
         }
     }
 
@@ -310,9 +282,7 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
 
         if (inlineDepth > 0) {
             variables.namedEntitySequence()
-                .filter { it.name.matches(inlinedThisRegex) && getInlineDepth(
-                    it.name
-                ) == inlineDepth && kind.typeMatches(it.type) }
+                .filter { it.name.matches(inlinedThisRegex) && getInlineDepth(it.name) == inlineDepth && kind.typeMatches(it.type) }
                 .mapNotNull { it.unwrapAndCheck(kind) }
                 .firstOrNull()
                 ?.let { return it }
@@ -341,12 +311,9 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
         val inlineDepth = getInlineDepth(variables)
 
         if (inlineDepth > 0) {
-            val nameInlineAwareRegex =
-                getLocalVariableNameRegexInlineAware(name)
+            val nameInlineAwareRegex = getLocalVariableNameRegexInlineAware(name)
             variables.namedEntitySequence()
-                .filter { it.name.matches(nameInlineAwareRegex) && getInlineDepth(
-                    it.name
-                ) == inlineDepth && kind.typeMatches(it.type) }
+                .filter { it.name.matches(nameInlineAwareRegex) && getInlineDepth(it.name) == inlineDepth && kind.typeMatches(it.type) }
                 .mapNotNull { it.unwrapAndCheck(kind) }
                 .firstOrNull()
                 ?.let { return it }
