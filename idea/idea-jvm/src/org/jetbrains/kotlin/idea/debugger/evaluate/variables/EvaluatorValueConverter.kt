@@ -3,11 +3,12 @@
  * that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.idea.debugger.evaluate
+package org.jetbrains.kotlin.idea.debugger.evaluate.variables
 
 import com.sun.jdi.*
 import org.jetbrains.kotlin.fileClasses.internalNameWithoutInnerClasses
-import org.jetbrains.kotlin.idea.debugger.evaluate.VariableFinder.Result
+import org.jetbrains.kotlin.idea.debugger.evaluate.ExecutionContext
+import org.jetbrains.kotlin.idea.debugger.evaluate.variables.VariableFinder.Result
 import org.jetbrains.kotlin.idea.debugger.isSubtype
 import org.jetbrains.kotlin.resolve.jvm.AsmTypes
 import org.jetbrains.kotlin.resolve.jvm.JvmPrimitiveType

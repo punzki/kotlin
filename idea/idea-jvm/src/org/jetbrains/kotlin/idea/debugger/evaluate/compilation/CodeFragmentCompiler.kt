@@ -3,7 +3,7 @@
  * that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.idea.debugger.evaluate
+package org.jetbrains.kotlin.idea.debugger.evaluate.compilation
 
 import org.jetbrains.kotlin.backend.common.output.OutputFile
 import org.jetbrains.kotlin.caches.resolve.KotlinCacheService
@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.Annotations
 import org.jetbrains.kotlin.descriptors.impl.*
+import org.jetbrains.kotlin.idea.debugger.evaluate.*
 import org.jetbrains.kotlin.idea.debugger.evaluate.classLoading.ClassToLoad
 import org.jetbrains.kotlin.idea.project.languageVersionSettings
 import org.jetbrains.kotlin.idea.util.application.runReadAction
@@ -51,7 +52,13 @@ object CodeFragmentCompiler {
     data class MethodSignature(val parameterTypes: List<Type>, val returnType: Type)
 
     fun compile(codeFragment: KtCodeFragment, bindingContext: BindingContext, moduleDescriptor: ModuleDescriptor): CompilationResult {
-        return runReadAction { doCompile(codeFragment, bindingContext, moduleDescriptor) }
+        return runReadAction {
+            doCompile(
+                codeFragment,
+                bindingContext,
+                moduleDescriptor
+            )
+        }
     }
 
     private fun doCompile(codeFragment: KtCodeFragment, bindingContext: BindingContext, moduleDescriptor: ModuleDescriptor): CompilationResult {
@@ -62,10 +69,18 @@ object CodeFragmentCompiler {
         val project = codeFragment.project
         val resolutionFacade = KotlinCacheService.getInstance(project).getResolutionFacade(listOf(codeFragment))
         val resolveSession = resolutionFacade.getFrontendService(ResolveSession::class.java)
-        val moduleDescriptorWrapper = EvaluatorModuleDescriptor(codeFragment, moduleDescriptor, resolveSession)
+        val moduleDescriptorWrapper = EvaluatorModuleDescriptor(
+            codeFragment,
+            moduleDescriptor,
+            resolveSession
+        )
 
         val defaultReturnType = moduleDescriptor.builtIns.unitType
-        val returnType = getReturnType(codeFragment, bindingContext, defaultReturnType)
+        val returnType = getReturnType(
+            codeFragment,
+            bindingContext,
+            defaultReturnType
+        )
 
         val compilerConfiguration = CompilerConfiguration()
         compilerConfiguration.languageVersionSettings = codeFragment.languageVersionSettings
@@ -75,10 +90,17 @@ object CodeFragmentCompiler {
             bindingContext, listOf(codeFragment), compilerConfiguration
         ).build()
 
-        val parameterInfo = CodeFragmentParameterAnalyzer(codeFragment, bindingContext).analyze()
+        val parameterInfo = CodeFragmentParameterAnalyzer(
+            codeFragment,
+            bindingContext
+        ).analyze()
         val (classDescriptor, methodDescriptor) = createDescriptorsForCodeFragment(
-            codeFragment, Name.identifier(GENERATED_CLASS_NAME), Name.identifier(GENERATED_FUNCTION_NAME),
-            parameterInfo, returnType, moduleDescriptorWrapper.packageFragmentForEvaluator
+            codeFragment,
+            Name.identifier(GENERATED_CLASS_NAME),
+            Name.identifier(GENERATED_FUNCTION_NAME),
+            parameterInfo,
+            returnType,
+            moduleDescriptorWrapper.packageFragmentForEvaluator
         )
 
         val codegenInfo = CodeFragmentCodegenInfo(classDescriptor, methodDescriptor, parameterInfo.parameters)
@@ -89,12 +111,24 @@ object CodeFragmentCompiler {
         val classes = generationState.factory.asList().filterClassFiles()
             .map { ClassToLoad(it.internalClassName, it.relativePath, it.asByteArray()) }
 
-        val methodSignature = getMethodSignature(methodDescriptor, parameterInfo.parameters, generationState)
-        val functionSuffixes = getLocalFunctionSuffixes(parameterInfo.parameters, generationState.typeMapper)
+        val methodSignature = getMethodSignature(
+            methodDescriptor,
+            parameterInfo.parameters,
+            generationState
+        )
+        val functionSuffixes = getLocalFunctionSuffixes(
+            parameterInfo.parameters,
+            generationState.typeMapper
+        )
 
         generationState.destroy()
 
-        return CompilationResult(classes, parameterInfo, functionSuffixes, methodSignature)
+        return CompilationResult(
+            classes,
+            parameterInfo,
+            functionSuffixes,
+            methodSignature
+        )
     }
 
     private fun getLocalFunctionSuffixes(
@@ -127,7 +161,10 @@ object CodeFragmentCompiler {
             getSharedTypeIfApplicable(param.targetDescriptor, typeMapper) ?: sigParam.asmType
         }
 
-        return MethodSignature(asmParameters, asmSignature.returnType)
+        return MethodSignature(
+            asmParameters,
+            asmSignature.returnType
+        )
     }
 
     private fun getReturnType(

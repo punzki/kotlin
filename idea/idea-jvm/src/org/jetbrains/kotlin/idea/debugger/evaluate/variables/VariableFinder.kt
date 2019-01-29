@@ -1,9 +1,9 @@
 /*
- * Copyright 2010-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license
+ * Copyright 2010-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license
  * that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.idea.debugger.evaluate
+package org.jetbrains.kotlin.idea.debugger.evaluate.variables
 
 import com.intellij.debugger.engine.evaluation.EvaluateExceptionUtil
 import com.intellij.debugger.engine.evaluation.EvaluationContextImpl
@@ -18,7 +18,10 @@ import org.jetbrains.kotlin.codegen.coroutines.CONTINUATION_VARIABLE_NAME
 import org.jetbrains.kotlin.codegen.inline.INLINE_FUN_VAR_SUFFIX
 import org.jetbrains.kotlin.codegen.inline.INLINE_TRANSFORMATION_SUFFIX
 import org.jetbrains.kotlin.idea.debugger.*
-import org.jetbrains.kotlin.idea.debugger.evaluate.CodeFragmentParameter.*
+import org.jetbrains.kotlin.idea.debugger.evaluate.ExecutionContext
+import org.jetbrains.kotlin.idea.debugger.evaluate.LOG
+import org.jetbrains.kotlin.idea.debugger.evaluate.compilation.CodeFragmentParameter
+import org.jetbrains.kotlin.idea.debugger.evaluate.compilation.CodeFragmentParameter.*
 import org.jetbrains.kotlin.idea.util.application.runReadAction
 import org.jetbrains.kotlin.idea.util.attachment.mergeAttachments
 import org.jetbrains.kotlin.load.java.JvmAbi
@@ -78,7 +81,8 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
         // org.jetbrains.kotlin.codegen.inline.MethodInliner.prepareNode
         private const val OUTER_THIS_FOR_INLINE = AsmUtil.THIS + '_'
 
-        val inlinedThisRegex = getLocalVariableNameRegexInlineAware(OUTER_THIS_FOR_INLINE)
+        val inlinedThisRegex =
+            getLocalVariableNameRegexInlineAware(OUTER_THIS_FOR_INLINE)
 
         private fun getCapturedVariableNameRegex(capturedName: String): Regex {
             val escapedName = Regex.escape(capturedName)
@@ -131,7 +135,10 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
         abstract fun capturedNameMatches(name: String): Boolean
 
         class Ordinary(val name: String, asmType: AsmType) : VariableKind(asmType) {
-            private val capturedNameRegex = getCapturedVariableNameRegex(getCapturedFieldName(this.name))
+            private val capturedNameRegex =
+                getCapturedVariableNameRegex(
+                    getCapturedFieldName(this.name)
+                )
             override fun capturedNameMatches(name: String) = capturedNameRegex.matches(name)
         }
 
@@ -159,7 +166,8 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
             val parameterName = getLabeledThisName(label, AsmUtil.LABELED_THIS_PARAMETER, AsmUtil.RECEIVER_PARAMETER_NAME)
             val fieldName = getLabeledThisName(label, getCapturedFieldName(AsmUtil.LABELED_THIS_FIELD), AsmUtil.CAPTURED_RECEIVER_FIELD)
 
-            private val capturedNameRegex = getCapturedVariableNameRegex(fieldName)
+            private val capturedNameRegex =
+                getCapturedVariableNameRegex(fieldName)
             override fun capturedNameMatches(name: String) = capturedNameRegex.matches(name)
         }
     }
@@ -169,24 +177,58 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
     private class NamedEntity(val name: String, val type: JdiType?, val value: () -> Value?) {
         companion object {
             fun of(field: Field, owner: ObjectReference): NamedEntity {
-                return NamedEntity(field.name(), field.safeType()) { owner.getValue(field) }
+                return NamedEntity(
+                    field.name(),
+                    field.safeType()
+                ) { owner.getValue(field) }
             }
 
             fun of(variable: LocalVariableProxyImpl, frameProxy: StackFrameProxyImpl): NamedEntity {
-                return NamedEntity(variable.name(), variable.safeType()) { frameProxy.getValue(variable) }
+                return NamedEntity(
+                    variable.name(),
+                    variable.safeType()
+                ) { frameProxy.getValue(variable) }
             }
         }
     }
 
     fun find(parameter: CodeFragmentParameter, asmType: AsmType): Result? {
         return when (parameter.kind) {
-            Kind.ORDINARY -> findOrdinary(VariableKind.Ordinary(parameter.name, asmType))
-            Kind.FAKE_JAVA_OUTER_CLASS -> frameProxy.thisObject()?.let { Result(it) }
-            Kind.EXTENSION_RECEIVER -> findExtensionThis(VariableKind.ExtensionThis(parameter.name, asmType))
-            Kind.LOCAL_FUNCTION -> findLocalFunction(VariableKind.LocalFunction(parameter.name, asmType))
-            Kind.DISPATCH_RECEIVER -> findDispatchThis(VariableKind.OuterClassThis(asmType))
+            Kind.ORDINARY -> findOrdinary(
+                VariableKind.Ordinary(
+                    parameter.name,
+                    asmType
+                )
+            )
+            Kind.FAKE_JAVA_OUTER_CLASS -> frameProxy.thisObject()?.let {
+                Result(
+                    it
+                )
+            }
+            Kind.EXTENSION_RECEIVER -> findExtensionThis(
+                VariableKind.ExtensionThis(
+                    parameter.name,
+                    asmType
+                )
+            )
+            Kind.LOCAL_FUNCTION -> findLocalFunction(
+                VariableKind.LocalFunction(
+                    parameter.name,
+                    asmType
+                )
+            )
+            Kind.DISPATCH_RECEIVER -> findDispatchThis(
+                VariableKind.OuterClassThis(
+                    asmType
+                )
+            )
             Kind.COROUTINE_CONTEXT -> findCoroutineContext()
-            Kind.FIELD_VAR -> findFieldVariable(VariableKind.FieldVar(parameter.name, asmType))
+            Kind.FIELD_VAR -> findFieldVariable(
+                VariableKind.FieldVar(
+                    parameter.name,
+                    asmType
+                )
+            )
         }
     }
 
@@ -268,7 +310,9 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
 
         if (inlineDepth > 0) {
             variables.namedEntitySequence()
-                .filter { it.name.matches(inlinedThisRegex) && getInlineDepth(it.name) == inlineDepth && kind.typeMatches(it.type) }
+                .filter { it.name.matches(inlinedThisRegex) && getInlineDepth(
+                    it.name
+                ) == inlineDepth && kind.typeMatches(it.type) }
                 .mapNotNull { it.unwrapAndCheck(kind) }
                 .firstOrNull()
                 ?.let { return it }
@@ -297,9 +341,12 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
         val inlineDepth = getInlineDepth(variables)
 
         if (inlineDepth > 0) {
-            val nameInlineAwareRegex = getLocalVariableNameRegexInlineAware(name)
+            val nameInlineAwareRegex =
+                getLocalVariableNameRegexInlineAware(name)
             variables.namedEntitySequence()
-                .filter { it.name.matches(nameInlineAwareRegex) && getInlineDepth(it.name) == inlineDepth && kind.typeMatches(it.type) }
+                .filter { it.name.matches(nameInlineAwareRegex) && getInlineDepth(
+                    it.name
+                ) == inlineDepth && kind.typeMatches(it.type) }
                 .mapNotNull { it.unwrapAndCheck(kind) }
                 .firstOrNull()
                 ?.let { return it }
@@ -435,6 +482,11 @@ class VariableFinder private constructor(private val context: ExecutionContext, 
     }
 
     private fun List<LocalVariableProxyImpl>.namedEntitySequence(): Sequence<NamedEntity> {
-        return asSequence().map { NamedEntity.of(it, frameProxy) }
+        return asSequence().map {
+            NamedEntity.of(
+                it,
+                frameProxy
+            )
+        }
     }
 }

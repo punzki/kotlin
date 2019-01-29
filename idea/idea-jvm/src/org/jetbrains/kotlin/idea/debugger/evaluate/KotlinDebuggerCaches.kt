@@ -41,6 +41,7 @@ import org.jetbrains.kotlin.idea.caches.resolve.analyzeWithAllCompilerChecks
 import org.jetbrains.kotlin.idea.debugger.BinaryCacheKey
 import org.jetbrains.kotlin.idea.debugger.BytecodeDebugInfo
 import org.jetbrains.kotlin.idea.debugger.createWeakBytecodeDebugInfoStorage
+import org.jetbrains.kotlin.idea.debugger.evaluate.compilation.CompiledDataDescriptor
 import org.jetbrains.kotlin.idea.runInReadActionWithWriteActionPriorityWithPCE
 import org.jetbrains.kotlin.idea.util.application.runReadAction
 import org.jetbrains.kotlin.psi.KtCodeFragment

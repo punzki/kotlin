@@ -3,10 +3,9 @@
  * that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.idea.debugger.evaluate
+package org.jetbrains.kotlin.idea.debugger.evaluate.compilation
 
 import com.intellij.debugger.SourcePosition
-import org.jetbrains.kotlin.backend.common.output.OutputFile
 import org.jetbrains.kotlin.idea.debugger.evaluate.classLoading.ClassToLoad
 
 class CompiledDataDescriptor(

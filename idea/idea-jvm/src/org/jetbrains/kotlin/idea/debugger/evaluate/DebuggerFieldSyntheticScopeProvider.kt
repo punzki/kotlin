@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license
+ * Copyright 2010-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license
  * that can be found in the license/LICENSE.txt file.
  */
 
@@ -42,7 +42,11 @@ class DebuggerFieldSyntheticScopeProvider : SyntheticScopeProviderExtension {
         moduleDescriptor: ModuleDescriptor,
         javaSyntheticPropertiesScope: JavaSyntheticPropertiesScope
     ): List<SyntheticScope> {
-        return listOf<SyntheticScope>(DebuggerFieldSyntheticScope(javaSyntheticPropertiesScope))
+        return listOf<SyntheticScope>(
+            DebuggerFieldSyntheticScope(
+                javaSyntheticPropertiesScope
+            )
+        )
     }
 }
 
@@ -159,7 +163,12 @@ private class DebuggerFieldSyntheticScope(val javaSyntheticPropertiesScope: Java
         getterSource: SourceElement,
         ownerType: (GenerationState) -> Type
     ): PropertyDescriptor {
-        val propertyDescriptor = DebuggerFieldPropertyDescriptor(clazz, fieldName, description, ownerType)
+        val propertyDescriptor = DebuggerFieldPropertyDescriptor(
+            clazz,
+            fieldName,
+            description,
+            ownerType
+        )
 
         val extensionReceiverParameter = DescriptorFactory.createExtensionReceiverParameterForCallable(
             propertyDescriptor,

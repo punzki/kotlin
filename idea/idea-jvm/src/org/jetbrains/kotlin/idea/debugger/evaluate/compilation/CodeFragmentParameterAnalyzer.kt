@@ -1,9 +1,9 @@
 /*
- * Copyright 2010-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license
+ * Copyright 2010-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license
  * that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.idea.debugger.evaluate
+package org.jetbrains.kotlin.idea.debugger.evaluate.compilation
 
 import com.intellij.debugger.engine.evaluation.EvaluateExceptionUtil
 import com.intellij.psi.PsiElement
@@ -12,7 +12,8 @@ import org.jetbrains.kotlin.codegen.CodeFragmentCodegenInfo
 import org.jetbrains.kotlin.codegen.getCallLabelForLambdaArgument
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.impl.SyntheticFieldDescriptor
-import org.jetbrains.kotlin.idea.debugger.evaluate.CodeFragmentParameter.*
+import org.jetbrains.kotlin.idea.debugger.evaluate.DebuggerFieldPropertyDescriptor
+import org.jetbrains.kotlin.idea.debugger.evaluate.compilation.CodeFragmentParameter.*
 import org.jetbrains.kotlin.idea.debugger.evaluate.KotlinCodeFragmentFactory.Companion.FAKE_JAVA_CONTEXT_FUNCTION_NAME
 import org.jetbrains.kotlin.idea.util.application.runReadAction
 import org.jetbrains.kotlin.load.java.sam.SingleAbstractMethodUtils
@@ -64,7 +65,8 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
     private val parameters = LinkedHashMap<DeclarationDescriptor, Smart>()
     private val crossingBounds = mutableSetOf<Dumb>()
 
-    private val onceUsedChecker = OnceUsedChecker(CodeFragmentParameterAnalyzer::class.java)
+    private val onceUsedChecker =
+        OnceUsedChecker(CodeFragmentParameterAnalyzer::class.java)
 
     fun analyze(): CodeFragmentParameterInfo {
         onceUsedChecker.trigger()

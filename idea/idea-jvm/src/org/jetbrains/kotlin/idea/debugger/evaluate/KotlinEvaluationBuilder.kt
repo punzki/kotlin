@@ -56,7 +56,13 @@ import org.jetbrains.kotlin.diagnostics.rendering.DefaultErrorMessages
 import org.jetbrains.kotlin.idea.caches.resolve.util.getJavaClassDescriptor
 import org.jetbrains.kotlin.idea.debugger.DebuggerUtils
 import org.jetbrains.kotlin.idea.debugger.evaluate.KotlinDebuggerCaches.Companion.compileCodeFragmentCacheAware
+import org.jetbrains.kotlin.idea.debugger.evaluate.compilation.CodeFragmentCompiler
+import org.jetbrains.kotlin.idea.debugger.evaluate.compilation.CodeFragmentParameter
+import org.jetbrains.kotlin.idea.debugger.evaluate.compilation.CompiledDataDescriptor
+import org.jetbrains.kotlin.idea.debugger.evaluate.compilation.mainClass
 import org.jetbrains.kotlin.idea.debugger.evaluate.compilingEvaluator.loadClassesSafely
+import org.jetbrains.kotlin.idea.debugger.evaluate.variables.EvaluatorValueConverter
+import org.jetbrains.kotlin.idea.debugger.evaluate.variables.VariableFinder
 import org.jetbrains.kotlin.idea.runInReadActionWithWriteActionPriorityWithPCE
 import org.jetbrains.kotlin.idea.util.application.executeWriteCommand
 import org.jetbrains.kotlin.idea.util.application.runReadAction
