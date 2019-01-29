@@ -56,17 +56,24 @@ class CodeFragmentParameterInfo(
     val crossingBounds: Set<CodeFragmentParameter.Dumb>
 )
 
+/*
+    The purpose of this class is to figure out what parameters the received code fragment captures.
+    It handles both directly mentioned names such as local variables or parameters and implicit values (dispatch/extension receivers).
+ */
 class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, private val bindingContext: BindingContext) {
     private val parameters = LinkedHashMap<DeclarationDescriptor, Smart>()
     private val crossingBounds = mutableSetOf<Dumb>()
 
+    private val onceUsedChecker = OnceUsedChecker(CodeFragmentParameterAnalyzer::class.java)
+
     fun analyze(): CodeFragmentParameterInfo {
-        checkUsedOnce()
+        onceUsedChecker.trigger()
 
         codeFragment.accept(object : KtTreeVisitor<Unit>() {
             override fun visitSimpleNameExpression(expression: KtSimpleNameExpression, data: Unit?): Void? {
                 val resolvedCall = expression.getResolvedCall(bindingContext) ?: return null
 
+                // Capture dispatch receiver for the extension callable
                 run {
                     val descriptor = resolvedCall.resultingDescriptor as? CallableDescriptor
                     val containingClass = descriptor?.containingDeclaration as? ClassDescriptor
@@ -81,10 +88,12 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
                 }
 
                 if (runReadAction { expression.isDotSelector() }) {
+                    // The receiver expression is already captured for this reference
                     return null
                 }
 
                 if (isCodeFragmentDeclaration(resolvedCall.resultingDescriptor)) {
+                    // The reference is from the code fragment we analyze, no need to capture
                     return null
                 }
 
@@ -113,9 +122,10 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
                     processed = true
                 }
 
+                // If a reference has receivers, we can calculate its value using them, no need to capture
                 if (!processed) {
                     val descriptor = resolvedCall.resultingDescriptor
-                    val parameter = processSimpleNameExpression(descriptor)
+                    val parameter = processCoroutineContextCall(descriptor) ?: processSimpleNameExpression(descriptor)
                     checkBounds(descriptor, expression, parameter)
                 }
 
@@ -125,7 +135,9 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
             override fun visitThisExpression(expression: KtThisExpression, data: Unit?): Void? {
                 val instanceReference = runReadAction { expression.instanceReference }
                 val target = bindingContext[BindingContext.REFERENCE_TARGET, instanceReference]
+
                 if (isCodeFragmentDeclaration(target)) {
+                    // The reference is from the code fragment we analyze, no need to capture
                     return null
                 }
 
@@ -133,11 +145,7 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
                     is ClassDescriptor -> processDispatchReceiver(target)
                     is CallableDescriptor -> {
                         val type = bindingContext[BindingContext.EXPRESSION_TYPE_INFO, expression]?.type
-                        if (type != null) {
-                            processExtensionReceiver(target, type, expression.getLabelName())
-                        } else {
-                            null
-                        }
+                        type?.let { processExtensionReceiver(target, type, expression.getLabelName()) }
                     }
                     else -> null
                 }
@@ -157,17 +165,22 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
         return CodeFragmentParameterInfo(parameters.values.toList(), crossingBounds)
     }
 
-    private fun isFakeFunctionForJavaContext(descriptor: CallableDescriptor): Boolean {
-        return descriptor is FunctionDescriptor
-                && descriptor.name.asString() == FAKE_JAVA_CONTEXT_FUNCTION_NAME
-                && codeFragment.getCopyableUserData(KtCodeFragment.FAKE_CONTEXT_FOR_JAVA_FILE) != null
-    }
-
     private fun processReceiver(receiver: ImplicitReceiver): Smart? {
         return when (receiver) {
-            is ExtensionReceiver -> processExtensionReceiver(receiver.declarationDescriptor, receiver.type, null)
             is ImplicitClassReceiver -> processDispatchReceiver(receiver.classDescriptor)
+            is ExtensionReceiver -> processExtensionReceiver(receiver.declarationDescriptor, receiver.type, null)
             else -> null
+        }
+    }
+
+    private fun processDispatchReceiver(descriptor: ClassDescriptor): Smart? {
+        if (descriptor.kind == ClassKind.OBJECT) {
+            return null
+        }
+
+        val type = descriptor.defaultType
+        return parameters.getOrPut(descriptor) {
+            Smart(Dumb(Kind.DISPATCH_RECEIVER, "", AsmUtil.THIS + "@" + descriptor.name.asString()), type, descriptor)
         }
     }
 
@@ -184,15 +197,20 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
         }
     }
 
-    private fun processDispatchReceiver(descriptor: ClassDescriptor): Smart? {
-        if (descriptor.kind == ClassKind.OBJECT) {
-            return null
+    private fun getLabel(callableDescriptor: CallableDescriptor): String? {
+        val source = callableDescriptor.source.getPsi()
+
+        if (source is KtFunctionLiteral) {
+            getCallLabelForLambdaArgument(source, bindingContext)?.let { return it }
         }
 
-        val type = descriptor.defaultType
-        return parameters.getOrPut(descriptor) {
-            Smart(Dumb(Kind.DISPATCH_RECEIVER, "", AsmUtil.THIS + "@" + descriptor.name.asString()), type, descriptor)
-        }
+        return callableDescriptor.name.takeIf { !it.isSpecial }?.asString()
+    }
+
+    private fun isFakeFunctionForJavaContext(descriptor: CallableDescriptor): Boolean {
+        return descriptor is FunctionDescriptor
+                && descriptor.name.asString() == FAKE_JAVA_CONTEXT_FUNCTION_NAME
+                && codeFragment.getCopyableUserData(KtCodeFragment.FAKE_CONTEXT_FOR_JAVA_FILE) != null
     }
 
     private fun processFakeJavaCodeReceiver(descriptor: CallableDescriptor): Smart? {
@@ -217,20 +235,9 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
         }
     }
 
-    private fun getLabel(callableDescriptor: CallableDescriptor): String? {
-        val source = callableDescriptor.source.getPsi()
-
-        if (source is KtFunctionLiteral) {
-            getCallLabelForLambdaArgument(source, bindingContext)?.let { return it }
-        }
-
-        return callableDescriptor.name.takeIf { !it.isSpecial }?.asString()
-    }
-
     private fun processSimpleNameExpression(target: DeclarationDescriptor): Smart? {
-        processCoroutineContextCall(target)?.let { return it }
-
         if ((target as? DeclarationDescriptorWithVisibility)?.visibility != Visibilities.LOCAL) {
+            // No need to capture non-local declarations
             return null
         }
 
@@ -253,8 +260,9 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
 
     private fun processCoroutineContextCall(target: DeclarationDescriptor): Smart? {
         if (target is PropertyDescriptor && target.fqNameSafe == COROUTINE_CONTEXT_1_3_FQ_NAME) {
-            val type = target.type
-            return parameters.getOrPut(target) { Smart(Dumb(Kind.COROUTINE_CONTEXT, ""), type, target) }
+            return parameters.getOrPut(target) {
+                Smart(Dumb(Kind.COROUTINE_CONTEXT, ""), target.type, target)
+            }
         }
 
         return null
@@ -312,12 +320,14 @@ class CodeFragmentParameterAnalyzer(private val codeFragment: KtCodeFragment, pr
         val context = (this.containingFile as? KtCodeFragment)?.context ?: return false
         return context.isInside(parent)
     }
+}
 
+private class OnceUsedChecker(private val clazz: Class<*>) {
     private var used = false
 
-    private fun checkUsedOnce() {
+    fun trigger() {
         if (used) {
-            error(CodeFragmentParameterAnalyzer::class.java.simpleName + " may be only used once")
+            error(clazz.name + " may be only used once")
         }
 
         used = true

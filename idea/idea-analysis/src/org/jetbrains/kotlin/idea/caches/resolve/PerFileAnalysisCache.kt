@@ -177,7 +177,7 @@ private object KotlinResolveDataProvider {
         try {
             if (analyzableElement is KtCodeFragment) {
                 val bodyResolveMode = BodyResolveMode.PARTIAL_FOR_COMPLETION
-                val bindingContext = codeFragmentAnalyzer.analyzeCodeFragment(analyzableElement, null, bodyResolveMode).bindingContext
+                val bindingContext = codeFragmentAnalyzer.analyzeCodeFragment(analyzableElement, bodyResolveMode).bindingContext
                 return AnalysisResult.success(bindingContext, moduleDescriptor)
             }
 

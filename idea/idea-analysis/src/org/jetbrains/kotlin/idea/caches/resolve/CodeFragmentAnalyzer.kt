@@ -29,7 +29,9 @@ import org.jetbrains.kotlin.resolve.bindingContextUtil.getDataFlowInfoAfter
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
 import org.jetbrains.kotlin.resolve.lazy.ResolveSession
+import org.jetbrains.kotlin.resolve.scopes.ImportingScope
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
+import org.jetbrains.kotlin.resolve.scopes.utils.ErrorLexicalScope
 import org.jetbrains.kotlin.resolve.scopes.utils.addImportingScopes
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
@@ -45,57 +47,117 @@ class CodeFragmentAnalyzer(
     @set:Inject // component dependency cycle
     lateinit var resolveElementCache: ResolveElementCache
 
-    fun analyzeCodeFragment(codeFragment: KtCodeFragment, trace: BindingTrace?, bodyResolveMode: BodyResolveMode): BindingTrace {
-        val codeFragmentElement = codeFragment.getContentElement()
+    fun analyzeCodeFragment(codeFragment: KtCodeFragment, bodyResolveMode: BodyResolveMode): BindingTrace {
+        val contextAnalysisResult = analyzeCodeFragmentContext(codeFragment, bodyResolveMode)
+        return doAnalyzeCodeFragment(codeFragment, contextAnalysisResult)
+    }
 
-        fun defaultStackTrace(): BindingTrace {
-            if (trace != null) {
-                return trace
-            }
+    private fun doAnalyzeCodeFragment(codeFragment: KtCodeFragment, contextAnalysisResult: ContextAnalysisResult): BindingTrace {
+        val (bindingContext, scope, dataFlowInfo) = contextAnalysisResult
+        val bindingTrace = DelegatingBindingTrace(bindingContext, "For code fragment analysis")
 
-            val context = (codeFragment.context as? KtElement)?.analyze(bodyResolveMode) ?: BindingContext.EMPTY
-            return DelegatingBindingTrace(context, "Code fragment analysis parent context")
-        }
-
-        val fragmentContextAnalysisResult = analyzeCodeFragmentContext(codeFragment, bodyResolveMode)
-            ?: return defaultStackTrace()
-
-        val (scopeForContextElement, dataFlowInfo, newBindingContext) = fragmentContextAnalysisResult
-
-        val newBindingTrace = DelegatingBindingTrace(newBindingContext, "For code fragment analysis")
-
-        when (codeFragmentElement) {
+        when (val contentElement = codeFragment.getContentElement()) {
             is KtExpression -> {
                 PreliminaryDeclarationVisitor.createForExpression(
-                    codeFragmentElement, newBindingTrace,
+                    contentElement, bindingTrace,
                     expressionTypingServices.languageVersionSettings
                 )
+
                 expressionTypingServices.getTypeInfo(
-                    scopeForContextElement,
-                    codeFragmentElement,
-                    TypeUtils.NO_EXPECTED_TYPE,
-                    dataFlowInfo,
-                    newBindingTrace,
-                    false
+                    scope, contentElement, TypeUtils.NO_EXPECTED_TYPE,
+                    dataFlowInfo, bindingTrace, false
                 )
             }
 
             is KtTypeReference -> {
                 val context = TypeResolutionContext(
-                    scopeForContextElement,
-                    newBindingTrace,
-                    true,
-                    true,
-                    codeFragment.suppressDiagnosticsInDebugMode()
+                    scope, bindingTrace,
+                    true, true, codeFragment.suppressDiagnosticsInDebugMode()
                 ).noBareTypes()
-                typeResolver.resolvePossiblyBareType(context, codeFragmentElement)
+
+                typeResolver.resolvePossiblyBareType(context, contentElement)
             }
         }
 
-        return newBindingTrace
+        return bindingTrace
     }
 
-    private fun getRelevantContextElement(context: PsiElement?): KtElement? {
+    private data class ContextAnalysisResult(
+        val bindingContext: BindingContext,
+        val scope: LexicalScope,
+        val dataFlowInfo: DataFlowInfo
+    )
+
+    private fun analyzeCodeFragmentContext(codeFragment: KtCodeFragment, bodyResolveMode: BodyResolveMode): ContextAnalysisResult {
+        fun resolutionFactory(element: KtElement): BindingContext {
+            return resolveElementCache.resolveToElements(listOf(element), bodyResolveMode)
+        }
+
+        val context = refineContextElement(codeFragment.context)
+
+        var bindingContext: BindingContext = BindingContext.EMPTY
+        var dataFlowInfo: DataFlowInfo = DataFlowInfo.EMPTY
+        var scope: LexicalScope? = null
+
+        when (context) {
+            is KtPrimaryConstructor -> {
+                val containingClass = context.getContainingClassOrObject()
+                val resolutionResult = getClassDescriptor(containingClass, ::resolutionFactory)
+                if (resolutionResult != null) {
+                    bindingContext = resolutionResult.bindingContext
+                    scope = resolutionResult.descriptor.scopeForInitializerResolution
+                }
+            }
+            is KtSecondaryConstructor -> {
+                val expression = context.bodyExpression ?: context.getDelegationCall().calleeExpression
+                if (expression != null) {
+                    bindingContext = resolutionFactory(expression)
+                    scope = bindingContext[BindingContext.LEXICAL_SCOPE, expression]
+                }
+            }
+            is KtClassOrObject -> {
+                val resolutionResult = getClassDescriptor(context, ::resolutionFactory)
+                if (resolutionResult != null) {
+                    bindingContext = resolutionResult.bindingContext
+                    scope = resolutionResult.descriptor.scopeForMemberDeclarationResolution
+                }
+            }
+            is KtFile -> {
+                bindingContext = resolveSession.bindingContext
+                scope = resolveSession.fileScopeProvider.getFileResolutionScope(context)
+            }
+            is KtElement -> {
+                bindingContext = resolutionFactory(context)
+                scope = bindingContext[BindingContext.LEXICAL_SCOPE, context]
+                dataFlowInfo = bindingContext.getDataFlowInfoAfter(context)
+            }
+        }
+
+        val scopeWithImports = enrichScopeWithImports(scope ?: ErrorLexicalScope(), codeFragment)
+        return ContextAnalysisResult(bindingContext, scopeWithImports, dataFlowInfo)
+    }
+
+    private data class ClassResolutionResult(val bindingContext: BindingContext, val descriptor: ClassDescriptorWithResolutionScopes)
+
+    private fun getClassDescriptor(
+        classOrObject: KtClassOrObject,
+        resolutionFactory: (KtElement) -> BindingContext
+    ): ClassResolutionResult? {
+        val bindingContext: BindingContext
+        val classDescriptor: ClassDescriptor?
+
+        if (!KtPsiUtil.isLocal(classOrObject)) {
+            bindingContext = resolveSession.bindingContext
+            classDescriptor = resolveSession.getClassDescriptor(classOrObject, NoLookupLocation.FROM_IDE)
+        } else {
+            bindingContext = resolutionFactory(classOrObject)
+            classDescriptor = bindingContext[BindingContext.DECLARATION_TO_DESCRIPTOR, classOrObject] as ClassDescriptor?
+        }
+
+        return (classDescriptor as? ClassDescriptorWithResolutionScopes)?.let { ClassResolutionResult(bindingContext, it) }
+    }
+
+    private fun refineContextElement(context: PsiElement?): KtElement? {
         return when (context) {
             is KtParameter -> context.getParentOfType<KtFunction>(true)
             is KtProperty -> context.delegateExpressionOrInitializer
@@ -107,87 +169,18 @@ class CodeFragmentAnalyzer(
         } ?: context as? KtElement
     }
 
-    private data class ContextAnalysisResult(
-        val scope: LexicalScope,
-        val dataFlowInfo: DataFlowInfo,
-        val bindingContext: BindingContext
-    )
+    private fun enrichScopeWithImports(scope: LexicalScope, codeFragment: KtCodeFragment): LexicalScope {
+        val importList = codeFragment.importsAsImportList()?.takeIf { it.imports.isNotEmpty() } ?: return scope
+        val importScopes = createImportScopes(importList)
+        return scope.addImportingScopes(importScopes)
+    }
 
-    private fun analyzeCodeFragmentContext(codeFragment: KtCodeFragment, bodyResolveMode: BodyResolveMode): ContextAnalysisResult? {
-        fun resolutionFactory(element: KtElement): BindingContext {
-            return resolveElementCache.resolveToElements(listOf(element), bodyResolveMode)
-        }
-
-        val context = getRelevantContextElement(codeFragment.context) ?: return null
-
-        val scopeForContextElement: LexicalScope?
-        val dataFlowInfo: DataFlowInfo
-
-        fun getClassDescriptor(classOrObject: KtClassOrObject): Pair<BindingContext, ClassDescriptorWithResolutionScopes>? {
-            val bindingContext: BindingContext
-            val classDescriptor: ClassDescriptor?
-
-            if (!KtPsiUtil.isLocal(classOrObject)) {
-                bindingContext = resolveSession.bindingContext
-                classDescriptor = resolveSession.getClassDescriptor(classOrObject, NoLookupLocation.FROM_IDE)
-            } else {
-                bindingContext = resolutionFactory(classOrObject)
-                classDescriptor = bindingContext[BindingContext.DECLARATION_TO_DESCRIPTOR, classOrObject] as ClassDescriptor?
-            }
-
-            return (classDescriptor as? ClassDescriptorWithResolutionScopes)?.let { Pair(bindingContext, it) }
-        }
-
-        val bindingContextForContext: BindingContext
-        when (context) {
-            is KtPrimaryConstructor -> {
-                val (bindingContext, classDescriptor) = getClassDescriptor(context.getContainingClassOrObject()) ?: return null
-
-                scopeForContextElement = classDescriptor.scopeForInitializerResolution
-                dataFlowInfo = DataFlowInfo.EMPTY
-                bindingContextForContext = bindingContext
-            }
-            is KtSecondaryConstructor -> {
-                val correctedContext = context.getDelegationCall().calleeExpression!!
-                bindingContextForContext = resolutionFactory(correctedContext)
-
-                scopeForContextElement = bindingContextForContext[BindingContext.LEXICAL_SCOPE, correctedContext]
-                dataFlowInfo = DataFlowInfo.EMPTY
-            }
-            is KtClassOrObject -> {
-                val (bindingContext, classDescriptor) = getClassDescriptor(context) ?: return null
-                scopeForContextElement = classDescriptor.scopeForMemberDeclarationResolution
-                dataFlowInfo = DataFlowInfo.EMPTY
-                bindingContextForContext = bindingContext
-            }
-            is KtFile -> {
-                scopeForContextElement = resolveSession.fileScopeProvider.getFileResolutionScope(context)
-                dataFlowInfo = DataFlowInfo.EMPTY
-                bindingContextForContext = BindingContext.EMPTY
-            }
-            else -> {
-                bindingContextForContext = resolutionFactory(context)
-
-                scopeForContextElement = bindingContextForContext[BindingContext.LEXICAL_SCOPE, context]
-                dataFlowInfo = bindingContextForContext.getDataFlowInfoAfter(context)
-            }
-        }
-
-        if (scopeForContextElement == null) return null
-
-        val importList = codeFragment.importsAsImportList()
-        if (importList == null || importList.imports.isEmpty()) {
-            return ContextAnalysisResult(scopeForContextElement, dataFlowInfo, bindingContextForContext)
-        }
-
-        val importScopes = importList.imports.mapNotNull {
+    private fun createImportScopes(importList: KtImportList): List<ImportingScope> {
+        return importList.imports.mapNotNull {
             qualifierResolver.processImportReference(
                 it, resolveSession.moduleDescriptor, resolveSession.trace,
                 excludedImportNames = emptyList(), packageFragmentForVisibilityCheck = null
             )
         }
-
-        val scope = scopeForContextElement.addImportingScopes(importScopes)
-        return ContextAnalysisResult(scope, dataFlowInfo, bindingContextForContext)
     }
 }
