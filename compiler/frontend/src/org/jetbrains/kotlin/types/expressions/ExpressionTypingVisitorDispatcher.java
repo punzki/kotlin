@@ -138,12 +138,8 @@ public abstract class ExpressionTypingVisitorDispatcher extends KtVisitor<Kotlin
     @Override
     @NotNull
     public final KotlinTypeInfo getTypeInfo(@NotNull KtExpression expression, ExpressionTypingContext context, boolean isStatement) {
-        ExpressionTypingContext newContext = context;
-        if (CodeFragmentUtilKt.suppressDiagnosticsInDebugMode(expression)) {
-            newContext = ExpressionTypingContext.newContext(context, true);
-        }
-        if (!isStatement) return getTypeInfo(expression, newContext);
-        return getTypeInfo(expression, newContext, getStatementVisitor(newContext));
+        if (!isStatement) return getTypeInfo(expression, context);
+        return getTypeInfo(expression, context, getStatementVisitor(context));
     }
 
     protected ExpressionTypingVisitorForStatements createStatementVisitor(ExpressionTypingContext context) {
