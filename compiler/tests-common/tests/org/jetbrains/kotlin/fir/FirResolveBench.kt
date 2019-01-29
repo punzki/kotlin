@@ -6,6 +6,7 @@ package org.jetbrains.kotlin.fir
 
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import org.jetbrains.kotlin.fir.declarations.FirFile
+import org.jetbrains.kotlin.fir.resolve.transformers.FirAccessResolveTransformer
 import org.jetbrains.kotlin.fir.types.ConeClassErrorType
 import org.jetbrains.kotlin.fir.types.ConeKotlinErrorType
 import org.jetbrains.kotlin.fir.types.FirResolvedType
@@ -31,6 +32,8 @@ fun doFirResolveTestBench(firFiles: List<FirFile>, transformers: List<FirTransfo
 
     try {
         for (transformer in transformers) {
+            if (transformer is FirAccessResolveTransformer) continue
+            println("Transformer: ${transformer::class.java}")
             for (firFile in firFiles) {
                 val time = measureNanoTime {
                     try {
