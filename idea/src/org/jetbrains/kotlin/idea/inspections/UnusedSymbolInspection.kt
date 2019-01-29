@@ -109,6 +109,17 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
                 }
                 else -> return false
             }
+
+            val project = declaration.project
+            val psiSearchHelper = PsiSearchHelper.SERVICE.getInstance(project)
+            for (name in listOf(declaration.name) + declaration.getAccessorNames() + listOfNotNull(declaration.getClassNameForCompanionObject())) {
+                if (name == null) continue
+                val useScope = psiSearchHelper.getUseScope(declaration) as? GlobalSearchScope ?: continue
+                if (psiSearchHelper.isCheapEnoughToSearchConsideringOperators(name, useScope, null, null) == TOO_MANY_OCCURRENCES) {
+                    return false // searching usages is too expensive; behave like it is used
+                }
+            }
+
             return lightElement != null && javaInspection.isEntryPoint(lightElement)
         }
 
@@ -223,7 +234,7 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
         val project = declaration.project
         val psiSearchHelper = PsiSearchHelper.SERVICE.getInstance(project)
 
-        val useScope = declaration.useScope
+        val useScope = psiSearchHelper.getUseScope(declaration)
         val restrictedScope = if (useScope is GlobalSearchScope) {
             var zeroOccurrences = true
 
