@@ -35,6 +35,7 @@ fun doFirResolveTestBench(firFiles: List<FirFile>, transformers: List<FirTransfo
             if (transformer is FirAccessResolveTransformer) continue
             println("Transformer: ${transformer::class.java}")
             for (firFile in firFiles) {
+                println(firFile.name)
                 val time = measureNanoTime {
                     try {
                         transformer.transformFile(firFile, null)
