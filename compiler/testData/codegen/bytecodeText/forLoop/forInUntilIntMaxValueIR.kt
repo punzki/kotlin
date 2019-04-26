@@ -1,7 +1,7 @@
-// IGNORE_BACKEND: JVM_IR
-const val M = Char.MAX_VALUE
+// TARGET_BACKEND: JVM_IR
+const val M = Int.MAX_VALUE
 
-fun f(a: Char): Int {
+fun f(a: Int): Int {
     var n = 0
     for (i in a until M) {
         n++
@@ -18,5 +18,6 @@ fun f(a: Char): Int {
 // 0 getFirst
 // 0 getLast
 // 0 getStep
-// 1 IF_ICMPGE
-// 1 IF
+// 1 IF_ICMPGT
+// 1 IF_ICMPNE
+// 2 IF
