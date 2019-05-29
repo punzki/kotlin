@@ -18,5 +18,5 @@ fun test(a: Int, b: Int): Int {
 // 0 getStep
 // 1 IF_ICMPEQ
 // 1 IF_ICMPGT
-// 1 IF_ICMPNE
+// 1 IF_ICMPLE
 // 3 IF

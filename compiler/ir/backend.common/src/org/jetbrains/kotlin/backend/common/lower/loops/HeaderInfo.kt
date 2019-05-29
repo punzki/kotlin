@@ -93,10 +93,37 @@ internal class ProgressionHeaderInfo(
     last: IrExpression,
     step: IrExpression,
     isReversed: Boolean = false,
+    canOverflow: Boolean? = null,
     direction: ProgressionDirection,
     additionalNotEmptyCondition: IrExpression? = null,
     val additionalVariables: List<IrVariable> = listOf()
 ) : HeaderInfo(progressionType, first, last, step, isReversed, direction, additionalNotEmptyCondition) {
+
+    private val _canOverflow: Boolean? = canOverflow
+    val canOverflow: Boolean by lazy {
+        if (_canOverflow != null) return@lazy _canOverflow
+
+        // Induction variable can overflow if it is not a const, or is MAX/MIN_VALUE (depending on direction).
+        val lastValueAsLong = last.constLongValue ?: return@lazy true  // If "last" is not a const Number or Char.
+        val constLimitAsLong = when (direction) {
+            ProgressionDirection.UNKNOWN ->
+                // If we don't know the direction, we can't be sure which limit to use.
+                return@lazy true
+            ProgressionDirection.DECREASING ->
+                when (progressionType) {
+                    ProgressionType.INT_PROGRESSION -> Int.MIN_VALUE.toLong()
+                    ProgressionType.CHAR_PROGRESSION -> Char.MIN_VALUE.toLong()
+                    ProgressionType.LONG_PROGRESSION -> Long.MIN_VALUE
+                }
+            ProgressionDirection.INCREASING ->
+                when (progressionType) {
+                    ProgressionType.INT_PROGRESSION -> Int.MAX_VALUE.toLong()
+                    ProgressionType.CHAR_PROGRESSION -> Char.MAX_VALUE.toLong()
+                    ProgressionType.LONG_PROGRESSION -> Long.MAX_VALUE
+                }
+        }
+        constLimitAsLong == lastValueAsLong
+    }
 
     override fun asReversed() = ProgressionHeaderInfo(
         progressionType = progressionType,

@@ -23,5 +23,5 @@ fun box(): String {
 // 0 getLast
 // 0 getStep
 // 1 IF_ICMPGT
-// 1 IFNE
+// 1 IF_ICMPLE
 // 2 IF
