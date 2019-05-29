@@ -19,5 +19,5 @@ fun f(a: Char): Int {
 // 0 getLast
 // 0 getStep
 // 1 IF_ICMPGT
-// 1 IF_ICMPNE
+// 1 IF_ICMPLE
 // 2 IF

@@ -30,8 +30,8 @@ fun box(): String {
 // 0 getFirst
 // 0 getLast
 // 0 getStep
-// 2 IF_ICMPNE
+// 2 IF_ICMPLE
 // 1 IFGT
-// 1 IFNE
+// 1 IFLE
 // 4 IF
 // 2 LCMP

@@ -20,7 +20,7 @@ fun test(): Long {
 // 0 getStep
 // 2 LCMP
 // 1 IFGT
-// 1 IFNE
+// 1 IFLE
 // 2 IF
 // 0 L2I
 // 0 I2L

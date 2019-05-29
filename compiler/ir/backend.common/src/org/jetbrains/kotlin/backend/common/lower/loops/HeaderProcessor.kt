@@ -71,7 +71,7 @@ internal sealed class ForLoopHeader(
         )
     }
 
-    protected fun buildNotEmptyCondition(builder: DeclarationIrBuilder): IrExpression =
+    protected fun buildLoopCondition(builder: DeclarationIrBuilder): IrExpression =
         with(builder) {
             val builtIns = context.irBuiltIns
             val progressionType = headerInfo.progressionType
@@ -81,7 +81,7 @@ internal sealed class ForLoopHeader(
                 else builtIns.lessFunByOperandType[progressionKotlinType]!!
 
             // The default condition depends on the direction.
-            val notEmptyCondition = when (headerInfo.direction) {
+            when (headerInfo.direction) {
                 ProgressionDirection.DECREASING ->
                     // last <= inductionVar (use `<` if last is exclusive)
                     irCall(compFun).apply {
@@ -122,9 +122,6 @@ internal sealed class ForLoopHeader(
                     )
                 }
             }
-
-            // Combine with the additional "not empty" condition, if any.
-            headerInfo.additionalNotEmptyCondition?.let { context.andand(it, notEmptyCondition) } ?: notEmptyCondition
         }
 }
 
@@ -156,26 +153,51 @@ internal class ProgressionLoopHeader(
 
     override fun buildLoop(builder: DeclarationIrBuilder, oldLoop: IrLoop, newBody: IrExpression?): LoopReplacement {
         with(builder) {
-            // Loop is lowered into something like:
-            //
-            //   if (inductionVar <= last) {
-            //     // Loop is not empty
-            //     do {
-            //       val loopVar = inductionVar
-            //       inductionVar += step
-            //       // Loop body
-            //     } while (loopVar != last)
-            //   }
-            //
-            // This form is safe even if the induction variable can overflow, because the condition is based on the loop variable.
-            val newLoop = IrDoWhileLoopImpl(oldLoop.startOffset, oldLoop.endOffset, oldLoop.type, oldLoop.origin).apply {
-                label = oldLoop.label
-                condition = irNotEquals(irGet(loopVariable!!), irGet(last))
-                body = newBody
+            return if (headerInfo.canOverflow) {
+                // Loop is lowered into something like:
+                //
+                //   if (inductionVar <= last) {
+                //     // Loop is not empty
+                //     do {
+                //       val loopVar = inductionVar
+                //       inductionVar += step
+                //       // Loop body
+                //     } while (loopVar != last)
+                //   }
+                //
+                // This form is safe even if the induction variable can overflow, because the condition is based on the loop variable.
+                val newLoop = IrDoWhileLoopImpl(oldLoop.startOffset, oldLoop.endOffset, oldLoop.type, oldLoop.origin).apply {
+                    label = oldLoop.label
+                    condition = irNotEquals(irGet(loopVariable!!), irGet(last))
+                    body = newBody
+                }
+                val notEmptyCheck = irIfThen(buildLoopCondition(this@with), newLoop)
+                LoopReplacement(newLoop, notEmptyCheck)
+            } else {
+                // If the induction variable can NOT overflow, use a do-while loop. Loop is lowered into something like:
+                //
+                //   if (inductionVar <= last) {
+                //     do {
+                //         val loopVar = inductionVar
+                //         inductionVar += step
+                //         // Loop body
+                //     } while (inductionVar <= last)
+                //   }
+                //
+                // Even though this can be simplified into a simpler while loop, using if + do-while (i.e., doing a loop inversion)
+                // performs better in benchmarks. In cases where `last` is a constant, the `if` may be optimized away.
+                val newLoop = IrDoWhileLoopImpl(oldLoop.startOffset, oldLoop.endOffset, oldLoop.type, oldLoop.origin).apply {
+                    label = oldLoop.label
+                    condition = buildLoopCondition(this@with)
+                    body = newBody
+                }
+                val loopCondition = buildLoopCondition(this@with)
+                // Combine with the additional "not empty" condition, if any.
+                val notEmptyCheck =
+                    irIfThen(headerInfo.additionalNotEmptyCondition?.let { context.andand(it, loopCondition) } ?: loopCondition,
+                             newLoop)
+                LoopReplacement(newLoop, notEmptyCheck)
             }
-            val notEmptyCheck = irIfThen(buildNotEmptyCondition(this@with), newLoop)
-
-            return LoopReplacement(newLoop, notEmptyCheck)
         }
     }
 }
@@ -211,7 +233,7 @@ internal class ArrayLoopHeader(
         //   }
         val newLoop = IrWhileLoopImpl(oldLoop.startOffset, oldLoop.endOffset, oldLoop.type, oldLoop.origin).apply {
             label = oldLoop.label
-            condition = buildNotEmptyCondition(this@with)
+            condition = buildLoopCondition(this@with)
             body = newBody
         }
         LoopReplacement(newLoop, newLoop)

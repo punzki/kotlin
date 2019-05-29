@@ -100,7 +100,7 @@ internal class UntilHandler(private val context: CommonBackendContext, private v
             //       val loopVar = inductionVar
             //       inductionVar++
             //       // Loop body
-            //     } while (loopVar != last)
+            //     } while (inductionVar <= last)
             //   }
             //
             // However, `B` may be an expression with side-effects that should only be evaluated once, and `A` may also have side-effects.
@@ -118,7 +118,7 @@ internal class UntilHandler(private val context: CommonBackendContext, private v
             //       val loopVar = inductionVar
             //       inductionVar++
             //       // Loop body
-            //     } while (loopVar != last)
+            //     } while (inductionVar <= last)
             //   }
             val receiverValue = expression.extensionReceiver!!
             val untilArg = expression.getValueArgument(0)!!
@@ -169,6 +169,7 @@ internal class UntilHandler(private val context: CommonBackendContext, private v
                 first = first,
                 last = last,
                 step = irInt(1),
+                canOverflow = false,
                 additionalVariables = additionalVariables,
                 additionalNotEmptyCondition = additionalNotEmptyCondition,
                 direction = ProgressionDirection.INCREASING
@@ -255,6 +256,7 @@ internal class IndicesHandler(private val context: CommonBackendContext) : Progr
                 first = irInt(0),
                 last = last.decrement(),
                 step = irInt(1),
+                canOverflow = false,
                 direction = ProgressionDirection.INCREASING
             )
         }

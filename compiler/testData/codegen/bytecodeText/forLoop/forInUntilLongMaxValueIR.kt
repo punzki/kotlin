@@ -20,5 +20,5 @@ fun f(a: Long): Int {
 // 0 getStep
 // 2 LCMP
 // 1 IFGT
-// 1 IFNE
+// 1 IFLE
 // 2 IF

@@ -15,5 +15,5 @@ fun test() {
 // 0 getFirst
 // 0 getLast
 // 1 IF_ICMPGT
-// 1 IF_ICMPNE
+// 1 IF_ICMPLE
 // 2 IF
