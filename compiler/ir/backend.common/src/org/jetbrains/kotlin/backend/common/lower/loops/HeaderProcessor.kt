@@ -168,7 +168,7 @@ internal class ProgressionLoopHeader(
                 // This form is safe even if the induction variable can overflow, because the condition is based on the loop variable.
                 val newLoop = IrDoWhileLoopImpl(oldLoop.startOffset, oldLoop.endOffset, oldLoop.type, oldLoop.origin).apply {
                     label = oldLoop.label
-                    condition = irNotEquals(irGet(loopVariable!!), irGet(last))
+                    condition = irNotEquals(irGet(last), irGet(loopVariable!!))
                     body = newBody
                 }
                 val notEmptyCheck = irIfThen(buildLoopCondition(this@with), newLoop)
