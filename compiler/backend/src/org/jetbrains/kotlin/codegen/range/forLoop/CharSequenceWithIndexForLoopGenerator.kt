@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.codegen.range.forLoop
 
+import org.jetbrains.kotlin.codegen.AsmUtil
 import org.jetbrains.kotlin.codegen.ExpressionCodegen
 import org.jetbrains.kotlin.codegen.StackValue
 import org.jetbrains.kotlin.codegen.generateCallReceiver
@@ -53,7 +54,9 @@ class CharSequenceWithIndexForLoopGenerator(
     }
 
     override fun checkPreCondition(loopExit: Label) {
-        v.load(indexVar, Type.INT_TYPE)
+//        v.load(indexVar, Type.INT_TYPE)
+        StackValue.local(indexVar, indexType)
+            .put(Type.INT_TYPE, v)
         if (canCacheLength) {
             v.load(lengthVar, Type.INT_TYPE)
         } else {
@@ -64,7 +67,9 @@ class CharSequenceWithIndexForLoopGenerator(
 
     override fun assignLoopParametersNextValues() {
         v.load(charSeqVar, charSeqType)
-        v.load(indexVar, Type.INT_TYPE)
+//        v.load(indexVar, Type.INT_TYPE)
+        StackValue.local(indexVar, indexType)
+            .put(Type.INT_TYPE, v)
         v.invokeinterface("java/lang/CharSequence", "charAt", "(I)C")
         if (elementLoopComponent != null) {
             StackValue.local(elementLoopComponent.parameterVar, elementLoopComponent.parameterType)
@@ -75,7 +80,15 @@ class CharSequenceWithIndexForLoopGenerator(
     }
 
     override fun incrementAndCheckPostCondition(loopExit: Label) {
-        v.iinc(indexVar, 1)
+//        v.iinc(indexVar, 1)
+        if (indexType === Type.INT_TYPE) {
+            v.iinc(indexVar, 1)
+        } else {
+            val indexLocal = StackValue.local(indexVar, indexType)
+            indexLocal.put(Type.INT_TYPE, v)
+            AsmUtil.genIncrement(Type.INT_TYPE, 1, v)
+            indexLocal.store(StackValue.onStack(Type.INT_TYPE), v)
+        }
     }
 
 }

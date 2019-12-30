@@ -1,10 +1,14 @@
 // !LANGUAGE: +StrictJavaNullabilityAssertions
 // TARGET_BACKEND: JVM
-// IGNORE_BACKEND: JVM, JVM_IR
+// IGNORE_BACKEND: JVM
 // IGNORE_BACKEND_FIR: JVM_IR
 // WITH_RUNTIME
 
-// Note: This fails because explicit types are ignored in destructuring declarations (KT-22392).
+// Note: This fails on JVM (non-IR) with NullPointerException inside the sanity check. The not-null assertion is not generated when
+// assigning to the variables in the destructuring declaration. The root cause seems to be that
+// CodegenAnnotatingVisitor/RuntimeAssertionsOnDeclarationBodyChecker do not analyze the need for not-null assertions on
+// KtDestructuringDeclarations and their entries.
+// The NPE is due to calling `intValue()` on the null Int; it is expected to be asserted as non-null first.
 
 // FILE: box.kt
 import kotlin.test.*

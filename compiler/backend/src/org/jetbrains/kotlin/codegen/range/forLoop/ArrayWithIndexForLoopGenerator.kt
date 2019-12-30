@@ -61,7 +61,9 @@ class ArrayWithIndexForLoopGenerator(
     override fun assignLoopParametersNextValues() {
         if (elementLoopComponent != null) {
             v.load(arrayVar, AsmTypes.OBJECT_TYPE)
-            v.load(indexVar, Type.INT_TYPE)
+//            v.load(indexVar, Type.INT_TYPE)
+            StackValue.local(indexVar, indexType)
+                .put(Type.INT_TYPE, v)
             v.aload(arrayElementType)
             StackValue.local(elementLoopComponent.parameterVar, elementLoopComponent.parameterType)
                 .store(StackValue.onStack(arrayElementType), v)
@@ -69,6 +71,14 @@ class ArrayWithIndexForLoopGenerator(
     }
 
     override fun incrementAndCheckPostCondition(loopExit: Label) {
-        v.iinc(indexVar, 1)
+//        v.iinc(indexVar, 1)
+        if (indexType === Type.INT_TYPE) {
+            v.iinc(indexVar, 1)
+        } else {
+            val indexLocal = StackValue.local(indexVar, indexType)
+            indexLocal.put(Type.INT_TYPE, v)
+            AsmUtil.genIncrement(Type.INT_TYPE, 1, v)
+            indexLocal.store(StackValue.onStack(Type.INT_TYPE), v)
+        }
     }
 }

@@ -119,7 +119,11 @@ class DestructuringDeclarationResolver(
                 )
             )
         }
-        return functionReturnType ?: errorType()
+        return if (!TypeUtils.noExpectedType(expectedType)) {
+            expectedType
+        } else {
+            functionReturnType ?: errorType()
+        }
     }
 
     private fun getExpectedTypeForComponent(context: ExpressionTypingContext, entry: KtDestructuringDeclarationEntry): KotlinType {

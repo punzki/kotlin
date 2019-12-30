@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.codegen.range.forLoop
 
+import org.jetbrains.kotlin.codegen.AsmUtil
 import org.jetbrains.kotlin.codegen.ExpressionCodegen
 import org.jetbrains.kotlin.codegen.StackValue
 import org.jetbrains.kotlin.codegen.generateCallReceiver
@@ -60,6 +61,14 @@ class IteratorWithIndexForLoopGenerator(
     }
 
     override fun incrementAndCheckPostCondition(loopExit: Label) {
-        v.iinc(indexVar, 1)
+//        v.iinc(indexVar, 1)
+        if (indexType === Type.INT_TYPE) {
+            v.iinc(indexVar, 1)
+        } else {
+            val indexLocal = StackValue.local(indexVar, indexType)
+            indexLocal.put(Type.INT_TYPE, v)
+            AsmUtil.genIncrement(Type.INT_TYPE, 1, v)
+            indexLocal.store(StackValue.onStack(Type.INT_TYPE), v)
+        }
     }
 }
