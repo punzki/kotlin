@@ -141,6 +141,8 @@ class StatementGenerator(
             componentSubstitutedCall.setExplicitReceiverValue(containerValue)
 
             val componentVariable = getOrFail(BindingContext.VARIABLE, ktEntry)
+            // Use the explicit type in component variable declaration if available
+            val componentVariableType = get(BindingContext.TYPE, ktEntry.typeReference) ?: componentVariable.type
 
             // componentN for '_' SHOULD NOT be evaluated
             if (componentVariable.name.isSpecial) continue
@@ -151,7 +153,7 @@ class StatementGenerator(
             )
             val irComponentVar = context.symbolTable.declareVariable(
                 ktEntry.startOffsetSkippingComments, ktEntry.endOffset, IrDeclarationOrigin.DEFINED,
-                componentVariable, componentVariable.type.toIrType(), irComponentCall
+                componentVariable, componentVariableType.toIrType(), irComponentCall
             )
             irBlock.statements.add(irComponentVar)
         }

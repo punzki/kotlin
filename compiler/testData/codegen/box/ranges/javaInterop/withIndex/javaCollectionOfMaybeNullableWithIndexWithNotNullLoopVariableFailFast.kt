@@ -1,10 +1,10 @@
 // !LANGUAGE: +StrictJavaNullabilityAssertions
 // TARGET_BACKEND: JVM
-// IGNORE_BACKEND: JVM, JVM_IR
+// IGNORE_BACKEND: JVM
 // IGNORE_BACKEND_FIR: JVM_IR
 // WITH_RUNTIME
 
-// Note: This fails because explicit types are ignored in destructuring declarations (KT-22392).
+// Note: This fails on JVM (non-IR) because explicit types are ignored in destructuring declarations (KT-22392).
 
 // FILE: box.kt
 import kotlin.test.*

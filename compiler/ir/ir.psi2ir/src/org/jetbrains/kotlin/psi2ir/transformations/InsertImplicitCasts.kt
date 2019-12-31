@@ -161,7 +161,8 @@ open class InsertImplicitCasts(
 
     override fun visitVariable(declaration: IrVariable): IrVariable =
         declaration.transformPostfix {
-            initializer = initializer?.cast(declaration.descriptor.type)
+//            initializer = initializer?.cast(declaration.descriptor.type))
+            initializer = initializer?.cast(type)
         }
 
     override fun visitField(declaration: IrField): IrStatement =
