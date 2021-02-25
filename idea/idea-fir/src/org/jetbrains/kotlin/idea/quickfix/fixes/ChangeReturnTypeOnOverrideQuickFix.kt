@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.idea.quickfix.fixes
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.parentOfType
+import org.jetbrains.kotlin.idea.KotlinBundle
 import org.jetbrains.kotlin.idea.fir.api.*
 import org.jetbrains.kotlin.idea.fir.api.applicator.HLApplicatorInput
 import org.jetbrains.kotlin.idea.fir.api.applicator.applicator
@@ -24,7 +25,7 @@ import org.jetbrains.kotlin.psi.*
 
 object ChangeTypeQuickFix {
     val applicator = applicator<KtCallableDeclaration, Input> {
-        familyName(CallableReturnTypeUpdaterApplicator.applicator.getFamilyName())
+        familyName(KotlinBundle.lazyMessage("fix.change.return.type.family"))
 
         actionName { declaration, (updateBaseFunction, type) ->
             val presentation = getPresentation(updateBaseFunction, declaration)

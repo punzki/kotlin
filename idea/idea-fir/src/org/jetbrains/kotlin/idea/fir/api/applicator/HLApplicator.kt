@@ -10,6 +10,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.idea.fir.low.level.api.annotations.PrivateForInline
 import org.jetbrains.kotlin.idea.frontend.api.ForbidKtResolve
+import org.jetbrains.kotlin.idea.quickfix.KotlinPsiOnlyQuickFixAction
 import kotlin.experimental.ExperimentalTypeInference
 import kotlin.reflect.KClass
 
@@ -52,14 +53,14 @@ sealed class HLApplicator<in PSI : PsiElement, in INPUT : HLApplicatorInput> {
      *
      * @see com.intellij.codeInsight.intention.IntentionAction.getFamilyName
      */
-    fun getFamilyName(): String = ForbidKtResolve.forbidResolveIn("HLApplicator.getFamilyName") {
-        getFamilyNameImpl()
+    fun getFamilyName(psi: PSI, input: INPUT): String = ForbidKtResolve.forbidResolveIn("HLApplicator.getFamilyName") {
+        getFamilyNameImpl(psi, input)
     }
 
     protected abstract fun applyToImpl(psi: PSI, input: INPUT, project: Project?, editor: Editor?)
     protected abstract fun isApplicableByPsiImpl(psi: PSI): Boolean
     protected abstract fun getActionNameImpl(psi: PSI, input: INPUT): String
-    protected abstract fun getFamilyNameImpl(): String
+    protected abstract fun getFamilyNameImpl(psi: PSI, input: INPUT): String
 }
 
 /**
@@ -97,7 +98,7 @@ internal class HLApplicatorImpl<PSI : PsiElement, INPUT : HLApplicatorInput>(
     val applyTo: (PSI, INPUT, Project?, Editor?) -> Unit,
     val isApplicableByPsi: (PSI) -> Boolean,
     val getActionName: (PSI, INPUT) -> String,
-    val getFamilyName: () -> String,
+    val getFamilyName: (PSI, INPUT) -> String,
 ) : HLApplicator<PSI, INPUT>() {
     override fun applyToImpl(psi: PSI, input: INPUT, project: Project?, editor: Editor?) {
         applyTo.invoke(psi, input, project, editor)
@@ -109,8 +110,8 @@ internal class HLApplicatorImpl<PSI : PsiElement, INPUT : HLApplicatorInput>(
     override fun getActionNameImpl(psi: PSI, input: INPUT): String =
         getActionName.invoke(psi, input)
 
-    override fun getFamilyNameImpl(): String =
-        getFamilyName.invoke()
+    override fun getFamilyNameImpl(psi: PSI, input: INPUT): String =
+        getFamilyName.invoke(psi, input)
 }
 
 
@@ -119,18 +120,22 @@ class HLApplicatorBuilder<PSI : PsiElement, INPUT : HLApplicatorInput> internal 
     var applyTo: ((PSI, INPUT, Project?, Editor?) -> Unit)? = null,
     private var isApplicableByPsi: ((PSI) -> Boolean)? = null,
     private var getActionName: ((PSI, INPUT) -> String)? = null,
-    private var getFamilyName: (() -> String)? = null
+    private var getFamilyName: ((PSI, INPUT) -> String)? = null
 ) {
     fun familyName(name: String) {
-        getFamilyName = { name }
+        getFamilyName = { _, _ -> name }
     }
 
     fun familyName(getName: () -> String) {
+        getFamilyName = { _, _ -> getName() }
+    }
+
+    fun familyName(getName: (PSI, INPUT) -> String) {
         getFamilyName = getName
     }
 
     fun familyAndActionName(getName: () -> String) {
-        getFamilyName = getName
+        getFamilyName = { _, _ -> getName() }
         getActionName = { _, _ -> getName() }
     }
 
@@ -194,3 +199,13 @@ fun <PSI : PsiElement, INPUT : HLApplicatorInput> applicator(
     init: HLApplicatorBuilder<PSI, INPUT>.() -> Unit,
 ): HLApplicator<PSI, INPUT> =
     HLApplicatorBuilder<PSI, INPUT>().apply(init).build()
+
+fun <PSI : PsiElement, INPUT : HLApplicatorInput, QUICK_FIX : KotlinPsiOnlyQuickFixAction<PSI>> applicatorByQuickFix(
+    isApplicableByPsi: (PSI) -> Boolean = { true },
+    quickFixByInput: (PSI, INPUT) -> QUICK_FIX
+): HLApplicator<PSI, INPUT> = HLApplicatorImpl(
+    applyTo = { psi, input, project, editor -> quickFixByInput(psi, input).invoke(project ?: psi.project, editor, psi.containingFile) },
+    isApplicableByPsi = isApplicableByPsi,
+    getActionName = { psi, input -> quickFixByInput(psi, input).text },
+    getFamilyName = { psi, input -> quickFixByInput(psi, input).familyName },
+)

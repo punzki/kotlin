@@ -27,7 +27,7 @@ abstract class AbstractHLIntention<PSI : KtElement, INPUT : HLApplicatorInput>(
         if (ranges.isEmpty()) return false
         val input = getInput(element)
         if (input != null && input.isValidFor(element)) {
-            setFamilyNameGetter(applicator::getFamilyName)
+            setFamilyNameGetter { applicator.getFamilyName(element, input) }
             setTextGetter { applicator.getActionName(element, input) }
             return true
         }

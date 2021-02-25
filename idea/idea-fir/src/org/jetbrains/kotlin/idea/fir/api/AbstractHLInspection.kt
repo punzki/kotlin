@@ -55,7 +55,11 @@ abstract class AbstractHLInspection<PSI : KtElement, INPUT : HLApplicatorInput>(
         if (!isOnTheFly && highlightType == ProblemHighlightType.INFORMATION) return
 
         val description = applicator.getActionName(element, input)
-        val fix = applicator.asLocalQuickFix(input, actionName = applicator.getActionName(element, input))
+        val fix = applicator.asLocalQuickFix(
+            input,
+            actionName = applicator.getActionName(element, input),
+            familyName = applicator.getFamilyName(element, input)
+        )
 
         ranges.forEach { range ->
             registerProblem(holder, element, range, description, highlightType, isOnTheFly, fix)
@@ -94,6 +98,7 @@ abstract class AbstractHLInspection<PSI : KtElement, INPUT : HLApplicatorInput>(
 private fun <PSI : PsiElement, INPUT : HLApplicatorInput> HLApplicator<PSI, INPUT>.asLocalQuickFix(
     input: INPUT,
     actionName: String,
+    familyName: String,
 ): LocalQuickFix = object : LocalQuickFix {
     override fun startInWriteAction() = false
 
@@ -106,6 +111,6 @@ private fun <PSI : PsiElement, INPUT : HLApplicatorInput> HLApplicator<PSI, INPU
         }
     }
 
-    override fun getFamilyName() = this@asLocalQuickFix.getFamilyName()
+    override fun getFamilyName() = familyName
     override fun getName() = actionName
 }

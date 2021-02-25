@@ -14,7 +14,7 @@ import org.jetbrains.kotlin.idea.quickfix.KotlinQuickFixAction
 import org.jetbrains.kotlin.psi.KtFile
 
 internal class HLQuickFix<PSI : PsiElement, in INPUT : HLApplicatorInput>(
-    target: PSI,
+    val target: PSI,
     private val input: INPUT,
     val applicator: HLApplicator<PSI, INPUT>,
 ) : KotlinQuickFixAction<PSI>(target) {
@@ -26,14 +26,14 @@ internal class HLQuickFix<PSI : PsiElement, in INPUT : HLApplicatorInput>(
     }
 
     override fun getText(): String {
-        val element = element ?: return applicator.getFamilyName()
+        val element = element ?: return applicator.getFamilyName(target, input)
         return if (input.isValidFor(element)) {
             applicator.getActionName(element, input)
         } else {
-            applicator.getFamilyName()
+            applicator.getFamilyName(element, input)
         }
     }
 
     override fun getFamilyName(): String =
-        applicator.getFamilyName()
+        applicator.getFamilyName(target, input)
 }
