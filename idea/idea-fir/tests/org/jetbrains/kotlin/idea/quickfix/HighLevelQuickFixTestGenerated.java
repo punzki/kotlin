@@ -197,6 +197,189 @@ public class HighLevelQuickFixTestGenerated extends AbstractHighLevelQuickFixTes
         }
     }
 
+    @TestMetadata("idea/testData/quickfix/expressions")
+    @TestDataPath("$PROJECT_ROOT")
+    @RunWith(JUnit3RunnerWithInners.class)
+    public static class Expressions extends AbstractHighLevelQuickFixTest {
+        private void runTest(String testDataFilePath) throws Exception {
+            KotlinTestUtils.runTest(this::doTest, this, testDataFilePath);
+        }
+
+        public void testAllFilesPresentInExpressions() throws Exception {
+            KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("idea/testData/quickfix/expressions"), Pattern.compile("^([\\w\\-_]+)\\.kt$"), null, true);
+        }
+
+        @TestMetadata("fixNullableBinaryWithExclExcl.kt")
+        public void testFixNullableBinaryWithExclExcl() throws Exception {
+            runTest("idea/testData/quickfix/expressions/fixNullableBinaryWithExclExcl.kt");
+        }
+
+        @TestMetadata("fixNullableInfixWithExclExcl.kt")
+        public void testFixNullableInfixWithExclExcl() throws Exception {
+            runTest("idea/testData/quickfix/expressions/fixNullableInfixWithExclExcl.kt");
+        }
+
+        @TestMetadata("fixNullableIterableGenericWithExclExcl.kt")
+        public void testFixNullableIterableGenericWithExclExcl() throws Exception {
+            runTest("idea/testData/quickfix/expressions/fixNullableIterableGenericWithExclExcl.kt");
+        }
+
+        @TestMetadata("fixNullableIterableWithExclExcl.kt")
+        public void testFixNullableIterableWithExclExcl() throws Exception {
+            runTest("idea/testData/quickfix/expressions/fixNullableIterableWithExclExcl.kt");
+        }
+
+        @TestMetadata("fixNullableUnaryWithExclExcl.kt")
+        public void testFixNullableUnaryWithExclExcl() throws Exception {
+            runTest("idea/testData/quickfix/expressions/fixNullableUnaryWithExclExcl.kt");
+        }
+
+        @TestMetadata("fixNullableWithExclExclAbsentWithBadIterator.kt")
+        public void testFixNullableWithExclExclAbsentWithBadIterator() throws Exception {
+            runTest("idea/testData/quickfix/expressions/fixNullableWithExclExclAbsentWithBadIterator.kt");
+        }
+
+        @TestMetadata("fixNullableWithIteratorWithExclExcl.kt")
+        public void testFixNullableWithIteratorWithExclExcl() throws Exception {
+            runTest("idea/testData/quickfix/expressions/fixNullableWithIteratorWithExclExcl.kt");
+        }
+
+        @TestMetadata("kt11594.kt")
+        public void testKt11594() throws Exception {
+            runTest("idea/testData/quickfix/expressions/kt11594.kt");
+        }
+
+        @TestMetadata("removeUselessCast.kt")
+        public void testRemoveUselessCast() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessCast.kt");
+        }
+
+        @TestMetadata("removeUselessCastForLambdaInParens1.kt")
+        public void testRemoveUselessCastForLambdaInParens1() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessCastForLambdaInParens1.kt");
+        }
+
+        @TestMetadata("removeUselessCastForLambdaInParens2.kt")
+        public void testRemoveUselessCastForLambdaInParens2() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessCastForLambdaInParens2.kt");
+        }
+
+        @TestMetadata("removeUselessCastForLambdaInParens3.kt")
+        public void testRemoveUselessCastForLambdaInParens3() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessCastForLambdaInParens3.kt");
+        }
+
+        @TestMetadata("removeUselessCastForLambdaInParens4.kt")
+        public void testRemoveUselessCastForLambdaInParens4() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessCastForLambdaInParens4.kt");
+        }
+
+        @TestMetadata("removeUselessCastForLambdaInParens5.kt")
+        public void testRemoveUselessCastForLambdaInParens5() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessCastForLambdaInParens5.kt");
+        }
+
+        @TestMetadata("removeUselessCastForLambdaInParens6.kt")
+        public void testRemoveUselessCastForLambdaInParens6() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessCastForLambdaInParens6.kt");
+        }
+
+        @TestMetadata("removeUselessCastInParens.kt")
+        public void testRemoveUselessCastInParens() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessCastInParens.kt");
+        }
+
+        @TestMetadata("removeUselessCastUnderSmartCast.kt")
+        public void testRemoveUselessCastUnderSmartCast() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessCastUnderSmartCast.kt");
+        }
+
+        @TestMetadata("removeUselessIsCheck.kt")
+        public void testRemoveUselessIsCheck() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessIsCheck.kt");
+        }
+
+        @TestMetadata("removeUselessIsCheckInWhen.kt")
+        public void testRemoveUselessIsCheckInWhen() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessIsCheckInWhen.kt");
+        }
+
+        @TestMetadata("removeUselessIsCheckInWhenExpressionless.kt")
+        public void testRemoveUselessIsCheckInWhenExpressionless() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessIsCheckInWhenExpressionless.kt");
+        }
+
+        @TestMetadata("removeUselessIsCheckInWhenExpressionlessNegate.kt")
+        public void testRemoveUselessIsCheckInWhenExpressionlessNegate() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessIsCheckInWhenExpressionlessNegate.kt");
+        }
+
+        @TestMetadata("removeUselessIsCheckInWhenNegate.kt")
+        public void testRemoveUselessIsCheckInWhenNegate() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessIsCheckInWhenNegate.kt");
+        }
+
+        @TestMetadata("removeUselessIsCheckNegate.kt")
+        public void testRemoveUselessIsCheckNegate() throws Exception {
+            runTest("idea/testData/quickfix/expressions/removeUselessIsCheckNegate.kt");
+        }
+
+        @TestMetadata("unnecessaryNonNullAssertion1.kt")
+        public void testUnnecessaryNonNullAssertion1() throws Exception {
+            runTest("idea/testData/quickfix/expressions/unnecessaryNonNullAssertion1.kt");
+        }
+
+        @TestMetadata("unnecessaryNonNullAssertion2.kt")
+        public void testUnnecessaryNonNullAssertion2() throws Exception {
+            runTest("idea/testData/quickfix/expressions/unnecessaryNonNullAssertion2.kt");
+        }
+
+        @TestMetadata("unnecessaryNonNullAssertion3.kt")
+        public void testUnnecessaryNonNullAssertion3() throws Exception {
+            runTest("idea/testData/quickfix/expressions/unnecessaryNonNullAssertion3.kt");
+        }
+
+        @TestMetadata("unnecessarySafeCall1.kt")
+        public void testUnnecessarySafeCall1() throws Exception {
+            runTest("idea/testData/quickfix/expressions/unnecessarySafeCall1.kt");
+        }
+
+        @TestMetadata("unsafeCall1.kt")
+        public void testUnsafeCall1() throws Exception {
+            runTest("idea/testData/quickfix/expressions/unsafeCall1.kt");
+        }
+
+        @TestMetadata("unsafeCall2.kt")
+        public void testUnsafeCall2() throws Exception {
+            runTest("idea/testData/quickfix/expressions/unsafeCall2.kt");
+        }
+
+        @TestMetadata("unsafeCall3.kt")
+        public void testUnsafeCall3() throws Exception {
+            runTest("idea/testData/quickfix/expressions/unsafeCall3.kt");
+        }
+
+        @TestMetadata("unsafeCall4.kt")
+        public void testUnsafeCall4() throws Exception {
+            runTest("idea/testData/quickfix/expressions/unsafeCall4.kt");
+        }
+
+        @TestMetadata("unsafeCall5.kt")
+        public void testUnsafeCall5() throws Exception {
+            runTest("idea/testData/quickfix/expressions/unsafeCall5.kt");
+        }
+
+        @TestMetadata("uselessCastStaticAssertIsFine.kt")
+        public void testUselessCastStaticAssertIsFine() throws Exception {
+            runTest("idea/testData/quickfix/expressions/uselessCastStaticAssertIsFine.kt");
+        }
+
+        @TestMetadata("uselessElvis.kt")
+        public void testUselessElvis() throws Exception {
+            runTest("idea/testData/quickfix/expressions/uselessElvis.kt");
+        }
+    }
+
     @TestMetadata("idea/testData/quickfix/lateinit")
     @TestDataPath("$PROJECT_ROOT")
     @RunWith(JUnit3RunnerWithInners.class)
@@ -558,6 +741,112 @@ public class HighLevelQuickFixTestGenerated extends AbstractHighLevelQuickFixTes
         }
     }
 
+    @TestMetadata("idea/testData/quickfix/nullables")
+    @TestDataPath("$PROJECT_ROOT")
+    @RunWith(JUnit3RunnerWithInners.class)
+    public static class Nullables extends AbstractHighLevelQuickFixTest {
+        private void runTest(String testDataFilePath) throws Exception {
+            KotlinTestUtils.runTest(this::doTest, this, testDataFilePath);
+        }
+
+        public void testAllFilesPresentInNullables() throws Exception {
+            KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("idea/testData/quickfix/nullables"), Pattern.compile("^([\\w\\-_]+)\\.kt$"), null, true);
+        }
+
+        @TestMetadata("removeRedundantNullable.kt")
+        public void testRemoveRedundantNullable() throws Exception {
+            runTest("idea/testData/quickfix/nullables/removeRedundantNullable.kt");
+        }
+
+        @TestMetadata("removeSupertypeNullable1.kt")
+        public void testRemoveSupertypeNullable1() throws Exception {
+            runTest("idea/testData/quickfix/nullables/removeSupertypeNullable1.kt");
+        }
+
+        @TestMetadata("removeSupertypeNullable2.kt")
+        public void testRemoveSupertypeNullable2() throws Exception {
+            runTest("idea/testData/quickfix/nullables/removeSupertypeNullable2.kt");
+        }
+
+        @TestMetadata("removeUselessNullable.kt")
+        public void testRemoveUselessNullable() throws Exception {
+            runTest("idea/testData/quickfix/nullables/removeUselessNullable.kt");
+        }
+
+        @TestMetadata("idea/testData/quickfix/nullables/unsafeInfixCall")
+        @TestDataPath("$PROJECT_ROOT")
+        @RunWith(JUnit3RunnerWithInners.class)
+        public static class UnsafeInfixCall extends AbstractHighLevelQuickFixTest {
+            private void runTest(String testDataFilePath) throws Exception {
+                KotlinTestUtils.runTest(this::doTest, this, testDataFilePath);
+            }
+
+            public void testAllFilesPresentInUnsafeInfixCall() throws Exception {
+                KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("idea/testData/quickfix/nullables/unsafeInfixCall"), Pattern.compile("^([\\w\\-_]+)\\.kt$"), null, true);
+            }
+
+            @TestMetadata("noComparison.kt")
+            public void testNoComparison() throws Exception {
+                runTest("idea/testData/quickfix/nullables/unsafeInfixCall/noComparison.kt");
+            }
+
+            @TestMetadata("unsafeComparisonInCondition.kt")
+            public void testUnsafeComparisonInCondition() throws Exception {
+                runTest("idea/testData/quickfix/nullables/unsafeInfixCall/unsafeComparisonInCondition.kt");
+            }
+
+            @TestMetadata("unsafeComparisonInLogic.kt")
+            public void testUnsafeComparisonInLogic() throws Exception {
+                runTest("idea/testData/quickfix/nullables/unsafeInfixCall/unsafeComparisonInLogic.kt");
+            }
+
+            @TestMetadata("unsafeComparisonInWhen.kt")
+            public void testUnsafeComparisonInWhen() throws Exception {
+                runTest("idea/testData/quickfix/nullables/unsafeInfixCall/unsafeComparisonInWhen.kt");
+            }
+
+            @TestMetadata("unsafeComparisonInWhile.kt")
+            public void testUnsafeComparisonInWhile() throws Exception {
+                runTest("idea/testData/quickfix/nullables/unsafeInfixCall/unsafeComparisonInWhile.kt");
+            }
+
+            @TestMetadata("unsafeGet.kt")
+            public void testUnsafeGet() throws Exception {
+                runTest("idea/testData/quickfix/nullables/unsafeInfixCall/unsafeGet.kt");
+            }
+
+            @TestMetadata("unsafeInfixCall.kt")
+            public void testUnsafeInfixCall() throws Exception {
+                runTest("idea/testData/quickfix/nullables/unsafeInfixCall/unsafeInfixCall.kt");
+            }
+
+            @TestMetadata("unsafeInvoke.kt")
+            public void testUnsafeInvoke() throws Exception {
+                runTest("idea/testData/quickfix/nullables/unsafeInfixCall/unsafeInvoke.kt");
+            }
+
+            @TestMetadata("unsafeInvokeWithImplicitReceiver.kt")
+            public void testUnsafeInvokeWithImplicitReceiver() throws Exception {
+                runTest("idea/testData/quickfix/nullables/unsafeInfixCall/unsafeInvokeWithImplicitReceiver.kt");
+            }
+
+            @TestMetadata("unsafeInvokeWithReceiver.kt")
+            public void testUnsafeInvokeWithReceiver() throws Exception {
+                runTest("idea/testData/quickfix/nullables/unsafeInfixCall/unsafeInvokeWithReceiver.kt");
+            }
+
+            @TestMetadata("unsafePlus.kt")
+            public void testUnsafePlus() throws Exception {
+                runTest("idea/testData/quickfix/nullables/unsafeInfixCall/unsafePlus.kt");
+            }
+
+            @TestMetadata("unsafeSet.kt")
+            public void testUnsafeSet() throws Exception {
+                runTest("idea/testData/quickfix/nullables/unsafeInfixCall/unsafeSet.kt");
+            }
+        }
+    }
+
     @TestMetadata("idea/testData/quickfix/override/typeMismatchOnOverride")
     @TestDataPath("$PROJECT_ROOT")
     @RunWith(JUnit3RunnerWithInners.class)
@@ -668,6 +957,308 @@ public class HighLevelQuickFixTestGenerated extends AbstractHighLevelQuickFixTes
         @TestMetadata("returnTypeMismatchOnOverrideUnitInt.kt")
         public void testReturnTypeMismatchOnOverrideUnitInt() throws Exception {
             runTest("idea/testData/quickfix/override/typeMismatchOnOverride/returnTypeMismatchOnOverrideUnitInt.kt");
+        }
+    }
+
+    @TestMetadata("idea/testData/quickfix/replaceInfixOrOperatorCall")
+    @TestDataPath("$PROJECT_ROOT")
+    @RunWith(JUnit3RunnerWithInners.class)
+    public static class ReplaceInfixOrOperatorCall extends AbstractHighLevelQuickFixTest {
+        private void runTest(String testDataFilePath) throws Exception {
+            KotlinTestUtils.runTest(this::doTest, this, testDataFilePath);
+        }
+
+        public void testAllFilesPresentInReplaceInfixOrOperatorCall() throws Exception {
+            KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("idea/testData/quickfix/replaceInfixOrOperatorCall"), Pattern.compile("^([\\w\\-_]+)\\.kt$"), null, true);
+        }
+
+        @TestMetadata("array.kt")
+        public void testArray() throws Exception {
+            runTest("idea/testData/quickfix/replaceInfixOrOperatorCall/array.kt");
+        }
+
+        @TestMetadata("arraySet.kt")
+        public void testArraySet() throws Exception {
+            runTest("idea/testData/quickfix/replaceInfixOrOperatorCall/arraySet.kt");
+        }
+
+        @TestMetadata("assignmentArray.kt")
+        public void testAssignmentArray() throws Exception {
+            runTest("idea/testData/quickfix/replaceInfixOrOperatorCall/assignmentArray.kt");
+        }
+
+        @TestMetadata("assignmentBinaryOperator.kt")
+        public void testAssignmentBinaryOperator() throws Exception {
+            runTest("idea/testData/quickfix/replaceInfixOrOperatorCall/assignmentBinaryOperator.kt");
+        }
+
+        @TestMetadata("assignmentCallExpression.kt")
+        public void testAssignmentCallExpression() throws Exception {
+            runTest("idea/testData/quickfix/replaceInfixOrOperatorCall/assignmentCallExpression.kt");
+        }
+
+        @TestMetadata("assignmentList.kt")
+        public void testAssignmentList() throws Exception {
+            runTest("idea/testData/quickfix/replaceInfixOrOperatorCall/assignmentList.kt");
+        }
+
+        @TestMetadata("binaryOperator.kt")
+        public void testBinaryOperator() throws Exception {
+            runTest("idea/testData/quickfix/replaceInfixOrOperatorCall/binaryOperator.kt");
+        }
+
+        @TestMetadata("callExpression.kt")
+        public void testCallExpression() throws Exception {
+            runTest("idea/testData/quickfix/replaceInfixOrOperatorCall/callExpression.kt");
+        }
+
+        @TestMetadata("hasElvis.kt")
+        public void testHasElvis() throws Exception {
+            runTest("idea/testData/quickfix/replaceInfixOrOperatorCall/hasElvis.kt");
+        }
+
+        @TestMetadata("list.kt")
+        public void testList() throws Exception {
+            runTest("idea/testData/quickfix/replaceInfixOrOperatorCall/list.kt");
+        }
+    }
+
+    @TestMetadata("idea/testData/quickfix/replaceWithDotCall")
+    @TestDataPath("$PROJECT_ROOT")
+    @RunWith(JUnit3RunnerWithInners.class)
+    public static class ReplaceWithDotCall extends AbstractHighLevelQuickFixTest {
+        private void runTest(String testDataFilePath) throws Exception {
+            KotlinTestUtils.runTest(this::doTest, this, testDataFilePath);
+        }
+
+        public void testAllFilesPresentInReplaceWithDotCall() throws Exception {
+            KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("idea/testData/quickfix/replaceWithDotCall"), Pattern.compile("^([\\w\\-_]+)\\.kt$"), null, true);
+        }
+
+        @TestMetadata("comment.kt")
+        public void testComment() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithDotCall/comment.kt");
+        }
+
+        @TestMetadata("functionCall.kt")
+        public void testFunctionCall() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithDotCall/functionCall.kt");
+        }
+
+        @TestMetadata("lineBreak.kt")
+        public void testLineBreak() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithDotCall/lineBreak.kt");
+        }
+
+        @TestMetadata("normal.kt")
+        public void testNormal() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithDotCall/normal.kt");
+        }
+    }
+
+    @TestMetadata("idea/testData/quickfix/replaceWithSafeCall")
+    @TestDataPath("$PROJECT_ROOT")
+    @RunWith(JUnit3RunnerWithInners.class)
+    public static class ReplaceWithSafeCall extends AbstractHighLevelQuickFixTest {
+        private void runTest(String testDataFilePath) throws Exception {
+            KotlinTestUtils.runTest(this::doTest, this, testDataFilePath);
+        }
+
+        public void testAllFilesPresentInReplaceWithSafeCall() throws Exception {
+            KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("idea/testData/quickfix/replaceWithSafeCall"), Pattern.compile("^([\\w\\-_]+)\\.kt$"), null, true);
+        }
+
+        @TestMetadata("apply.kt")
+        public void testApply() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/apply.kt");
+        }
+
+        @TestMetadata("applyWithImplicitParameter.kt")
+        public void testApplyWithImplicitParameter() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/applyWithImplicitParameter.kt");
+        }
+
+        @TestMetadata("applyWithImplicitParameterFunctionCall.kt")
+        public void testApplyWithImplicitParameterFunctionCall() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/applyWithImplicitParameterFunctionCall.kt");
+        }
+
+        @TestMetadata("assignment.kt")
+        public void testAssignment() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/assignment.kt");
+        }
+
+        @TestMetadata("assignmentFromImplicitParameter.kt")
+        public void testAssignmentFromImplicitParameter() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/assignmentFromImplicitParameter.kt");
+        }
+
+        @TestMetadata("assignmentToNullable.kt")
+        public void testAssignmentToNullable() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/assignmentToNullable.kt");
+        }
+
+        @TestMetadata("assignmentToProperty.kt")
+        public void testAssignmentToProperty() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/assignmentToProperty.kt");
+        }
+
+        @TestMetadata("comment.kt")
+        public void testComment() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/comment.kt");
+        }
+
+        @TestMetadata("expression.kt")
+        public void testExpression() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/expression.kt");
+        }
+
+        @TestMetadata("extFunction.kt")
+        public void testExtFunction() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/extFunction.kt");
+        }
+
+        @TestMetadata("functionCall.kt")
+        public void testFunctionCall() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/functionCall.kt");
+        }
+
+        @TestMetadata("hasElvis.kt")
+        public void testHasElvis() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/hasElvis.kt");
+        }
+
+        @TestMetadata("hasElvis2.kt")
+        public void testHasElvis2() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/hasElvis2.kt");
+        }
+
+        @TestMetadata("invokeOperator.kt")
+        public void testInvokeOperator() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/invokeOperator.kt");
+        }
+
+        @TestMetadata("let.kt")
+        public void testLet() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/let.kt");
+        }
+
+        @TestMetadata("letWithParameter.kt")
+        public void testLetWithParameter() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/letWithParameter.kt");
+        }
+
+        @TestMetadata("lineBreak.kt")
+        public void testLineBreak() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/lineBreak.kt");
+        }
+
+        @TestMetadata("noReplaceWithSafeCallForImplicitReceiver.kt")
+        public void testNoReplaceWithSafeCallForImplicitReceiver() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/noReplaceWithSafeCallForImplicitReceiver.kt");
+        }
+
+        @TestMetadata("normal.kt")
+        public void testNormal() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCall/normal.kt");
+        }
+    }
+
+    @TestMetadata("idea/testData/quickfix/replaceWithSafeCallForScopeFunction")
+    @TestDataPath("$PROJECT_ROOT")
+    @RunWith(JUnit3RunnerWithInners.class)
+    public static class ReplaceWithSafeCallForScopeFunction extends AbstractHighLevelQuickFixTest {
+        private void runTest(String testDataFilePath) throws Exception {
+            KotlinTestUtils.runTest(this::doTest, this, testDataFilePath);
+        }
+
+        public void testAllFilesPresentInReplaceWithSafeCallForScopeFunction() throws Exception {
+            KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("idea/testData/quickfix/replaceWithSafeCallForScopeFunction"), Pattern.compile("^([\\w\\-_]+)\\.kt$"), null, true);
+        }
+
+        @TestMetadata("also.kt")
+        public void testAlso() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/also.kt");
+        }
+
+        @TestMetadata("applyWithFake.kt")
+        public void testApplyWithFake() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/applyWithFake.kt");
+        }
+
+        @TestMetadata("applyWithThis.kt")
+        public void testApplyWithThis() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/applyWithThis.kt");
+        }
+
+        @TestMetadata("applyWithThisAndArrow.kt")
+        public void testApplyWithThisAndArrow() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/applyWithThisAndArrow.kt");
+        }
+
+        @TestMetadata("applyWithThisLabeled.kt")
+        public void testApplyWithThisLabeled() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/applyWithThisLabeled.kt");
+        }
+
+        @TestMetadata("applyWithThisLabeledFake.kt")
+        public void testApplyWithThisLabeledFake() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/applyWithThisLabeledFake.kt");
+        }
+
+        @TestMetadata("applyWithoutThis.kt")
+        public void testApplyWithoutThis() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/applyWithoutThis.kt");
+        }
+
+        @TestMetadata("applyWithoutThisMethodCall.kt")
+        public void testApplyWithoutThisMethodCall() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/applyWithoutThisMethodCall.kt");
+        }
+
+        @TestMetadata("assignment.kt")
+        public void testAssignment() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/assignment.kt");
+        }
+
+        @TestMetadata("comment.kt")
+        public void testComment() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/comment.kt");
+        }
+
+        @TestMetadata("let.kt")
+        public void testLet() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/let.kt");
+        }
+
+        @TestMetadata("letWithParam.kt")
+        public void testLetWithParam() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/letWithParam.kt");
+        }
+
+        @TestMetadata("letWithWrongImplicitThis.kt")
+        public void testLetWithWrongImplicitThis() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/letWithWrongImplicitThis.kt");
+        }
+
+        @TestMetadata("letWithWrongParam.kt")
+        public void testLetWithWrongParam() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/letWithWrongParam.kt");
+        }
+
+        @TestMetadata("lineBreak.kt")
+        public void testLineBreak() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/lineBreak.kt");
+        }
+
+        @TestMetadata("notInsideScope.kt")
+        public void testNotInsideScope() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/notInsideScope.kt");
+        }
+
+        @TestMetadata("run.kt")
+        public void testRun() throws Exception {
+            runTest("idea/testData/quickfix/replaceWithSafeCallForScopeFunction/run.kt");
         }
     }
 

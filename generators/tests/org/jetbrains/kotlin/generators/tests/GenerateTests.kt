@@ -1115,9 +1115,15 @@ fun main(args: Array<String>) {
             testClass<AbstractHighLevelQuickFixTest> {
                 val pattern = "^([\\w\\-_]+)\\.kt$"
                 model("quickfix/abstract", pattern = pattern, filenameStartsLowerCase = true)
+                model("quickfix/expressions", pattern = pattern, filenameStartsLowerCase = true)
                 model("quickfix/lateinit", pattern = pattern, filenameStartsLowerCase = true)
                 model("quickfix/modifiers", pattern = pattern, filenameStartsLowerCase = true, recursive = false)
+                model("quickfix/nullables", pattern = pattern, filenameStartsLowerCase = true)
                 model("quickfix/override/typeMismatchOnOverride", pattern = pattern, filenameStartsLowerCase = true, recursive = false)
+                model("quickfix/replaceInfixOrOperatorCall", pattern = pattern, filenameStartsLowerCase = true)
+                model("quickfix/replaceWithDotCall", pattern = pattern, filenameStartsLowerCase = true)
+                model("quickfix/replaceWithSafeCall", pattern = pattern, filenameStartsLowerCase = true)
+                model("quickfix/replaceWithSafeCallForScopeFunction", pattern = pattern, filenameStartsLowerCase = true)
                 model("quickfix/variables/changeMutability", pattern = pattern, filenameStartsLowerCase = true, recursive = false)
             }
 
