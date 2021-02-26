@@ -1,4 +1,5 @@
 // "Replace with safe (?.) call" "true"
-fun foo(a: Int?) {
-    a<caret>.plus(1)
+fun foo(a: String?) {
+    a<caret>.length
 }
+/* FIR_COMPARISON */
